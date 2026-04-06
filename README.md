@@ -11,7 +11,6 @@ Hartë interaktive front-end për një projekt shkolle rreth Luftës së Dytë B
 - Ka kërkim sipas emrit ose vendit.
 - Ka listë interaktive të ngjarjeve që lidhet me hartën.
 - Ka butonin `Luaj Kronologjinë` për prezantim hap pas hapi.
-- Shfaq emrat e shteteve në gjuhën shqipe si overlay mbi hartë.
 
 ## Teknologjite
 
@@ -68,7 +67,6 @@ URL-ja e publikuar për këtë projekt është:
 - Projekti është `front-end only`, pa backend.
 - Harta bazë vjen nga tiles të OpenStreetMap.
 - Etiketat e vetë tiles mund të shfaqen në gjuhë të ndryshme lokale, sepse ato janë pjesë e imazhit bazë të hartës.
-- Emrat e shteteve në shqip shtohen si overlay i veçantë sipër hartës.
 
 ## Gjendja aktuale e projektit
 
@@ -78,7 +76,7 @@ Aktualisht projekti përfshin:
 - dizajn më të pastër dhe më të përshtatshëm për prezantim
 - hartë më të qëndrueshme gjatë scroll-it
 - ngjarje të shumta historike në vende të ndryshme të botës
-- etiketa shtetesh në shqip
+- panel udhëzues poshtë hartës
 
 ## Mirëmbajtja e README
 
