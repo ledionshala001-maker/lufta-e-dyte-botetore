@@ -690,6 +690,7 @@ h2 {
   padding: 6px 8px;
   border-radius: 12px;
   transition: background-color 0.2s ease;
+  position: relative;
 }
 
 .legend-item:hover {
@@ -699,6 +700,37 @@ h2 {
 .legend-item.active {
   background-color: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.legend-label {
+  display: inline;
+}
+
+.legend-popup {
+  position: absolute;
+  bottom: -100px;
+  left: 0;
+  background: rgba(45, 30, 17, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  width: 200px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  color: rgba(255, 246, 234, 0.9);
+  font-size: 0.85rem;
+}
+
+.legend-popup p {
+  margin: 0 0 8px;
+  font-weight: 500;
+  color: rgba(255, 246, 234, 0.95);
+}
+
+.popup-count {
+  display: block;
+  font-size: 0.8rem;
+  color: rgba(255, 246, 234, 0.7);
 }
 
 .map-help-card {

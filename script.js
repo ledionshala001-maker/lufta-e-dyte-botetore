@@ -804,10 +804,23 @@ function bindControls() {
 
   // Legend item click handlers
   document.querySelectorAll(".legend-item").forEach((item) => {
+    const type = item.dataset.type;
+    const popup = item.querySelector(".legend-popup");
+    const countSpan = popup.querySelector(".popup-count");
+    
+    // Calculate and display count
+    const typeCount = events.filter((e) => e.type === type).length;
+    countSpan.textContent = `${typeCount} ngjarje`;
+    
     item.addEventListener("click", (e) => {
       e.stopPropagation();
-      const type = item.dataset.type;
       
+      // Toggle popup visibility
+      const isVisible = popup.style.display === "block";
+      document.querySelectorAll(".legend-popup").forEach((p) => (p.style.display = "none"));
+      popup.style.display = isVisible ? "none" : "block";
+      
+      // Toggle filter
       if (state.type === type) {
         state.type = "all";
         item.classList.remove("active");
@@ -819,6 +832,13 @@ function bindControls() {
       
       updateUI(true);
     });
+  });
+  
+  // Close popups when clicking elsewhere
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".legend-item")) {
+      document.querySelectorAll(".legend-popup").forEach((p) => (p.style.display = "none"));
+    }
   });
 }
 
