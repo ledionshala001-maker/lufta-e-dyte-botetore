@@ -1,12 +1,69 @@
-const map = L.map("map", {
-  worldCopyJump: true,
-  scrollWheelZoom: false,
-}).setView([28, 15], 2);
+// If you want Albanian labels on the map, get a free MapTiler Cloud API key
+// at https://www.maptiler.com/ and replace YOUR_MAPTILER_KEY below.
+const MAPTILER_KEY = "yZn3JKo7lNscLEszvALo";
+// Using Streets-v4 style with proper English/local language support
+const mapStyleUrl = `https://api.maptiler.com/maps/streets-v4/style.json?key=${MAPTILER_KEY}`;
 
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  referrerPolicy: "strict-origin-when-cross-origin"
-}).addTo(map);
+let map;
+
+function localizeStyleField(field) {
+  if (!Array.isArray(field)) {
+    return field;
+  }
+
+  if (field[0] === "concat") {
+    return ["concat", 
+      ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]], 
+      " / ", 
+      ["get", "name:latin"]
+    ];
+  }
+
+  if (field[0] === "get" && field[1] === "name:latin") {
+    return ["concat", 
+      ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]], 
+      " / ", 
+      ["get", "name:latin"]
+    ];
+  }
+
+  return field.map(localizeStyleField);
+}
+
+function localizeMapStyle(style) {
+  style.layers.forEach((layer) => {
+    if (layer.layout && layer.layout["text-field"]) {
+      layer.layout["text-field"] = localizeStyleField(layer.layout["text-field"]);
+    }
+  });
+
+  return style;
+}
+
+async function initMap() {
+  const response = await fetch(mapStyleUrl);
+  const style = await response.json();
+  const localizedStyle = localizeMapStyle(style);
+
+  map = new maplibregl.Map({
+    container: "map",
+    style: localizedStyle,
+    center: [19.8171, 41.3275],
+    zoom: 7,
+    attributionControl: false
+  });
+
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+
+  map.on("load", () => {
+    createMarkers();
+    state.selectedId = events[0].id;
+    updateUI(true);
+    map.resize();
+  });
+}
+
+initMap();
 
 // Të dhënat janë renditur sipas kohës që lista dhe "story mode" të ecin natyrshëm.
 const events = [
@@ -425,16 +482,10 @@ function getTypeLabel(type) {
   return labels[type];
 }
 
-function createMarkerIcon(type, isActive = false) {
-  const activeClass = isActive ? "active" : "";
-
-  return L.divIcon({
-    className: "",
-    html: `<div class="event-marker ${type} ${activeClass}"></div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
-    popupAnchor: [0, -10]
-  });
+function createMarkerElement(type, isActive = false) {
+  const markerEl = document.createElement("div");
+  markerEl.className = `event-marker ${type}${isActive ? " active" : ""}`;
+  return markerEl;
 }
 
 function popupTemplate(event) {
@@ -450,18 +501,31 @@ function popupTemplate(event) {
 
 function createMarkers() {
   events.forEach((event) => {
-    const marker = L.marker(event.coords, {
-      icon: createMarkerIcon(event.type)
-    });
+    const markerEl = createMarkerElement(event.type, state.selectedId === event.id);
+    const popup = new maplibregl.Popup({
+      offset: 25,
+      closeButton: false,
+      closeOnClick: true
+    }).setHTML(popupTemplate(event));
 
-    marker.bindPopup(popupTemplate(event));
-    marker.eventData = event;
-    marker.on("click", () => {
+    const marker = new maplibregl.Marker(markerEl)
+      .setLngLat([event.coords[1], event.coords[0]])
+      .setPopup(popup)
+      .addTo(map);
+
+    markerEl.addEventListener("click", () => {
       state.selectedId = event.id;
       updateUI(false);
+      popup.addTo(map);
     });
 
-    markers.set(event.id, marker);
+    markers.set(event.id, {
+      marker,
+      popup,
+      element: markerEl,
+      eventData: event,
+      visible: true
+    });
   });
 }
 
@@ -567,18 +631,22 @@ function updateMarkers(filteredEvents) {
   const visibleIds = new Set(filteredEvents.map((event) => event.id));
   const visibleMarkers = [];
 
-  markers.forEach((marker, id) => {
-    const event = marker.eventData;
+  markers.forEach((markerObj, id) => {
+    const event = markerObj.eventData;
     const isVisible = visibleIds.has(id);
     const isActive = state.selectedId === id;
 
-    marker.setIcon(createMarkerIcon(event.type, isActive));
+    markerObj.element.classList.toggle("active", isActive);
 
     if (isVisible) {
-      marker.addTo(map);
-      visibleMarkers.push(marker);
-    } else {
-      map.removeLayer(marker);
+      if (!markerObj.visible) {
+        markerObj.marker.addTo(map);
+        markerObj.visible = true;
+      }
+      visibleMarkers.push(markerObj);
+    } else if (markerObj.visible) {
+      markerObj.marker.remove();
+      markerObj.visible = false;
     }
   });
 
@@ -587,12 +655,23 @@ function updateMarkers(filteredEvents) {
 
 function fitMapToMarkers(visibleMarkers) {
   if (visibleMarkers.length === 0) {
-    map.setView([28, 15], 2);
+    map.setCenter([15, 28]);
+    map.setZoom(2);
     return;
   }
 
-  const group = L.featureGroup(visibleMarkers);
-  map.fitBounds(group.getBounds().pad(0.28));
+  if (visibleMarkers.length === 1) {
+    const lngLat = visibleMarkers[0].marker.getLngLat();
+    map.flyTo({ center: [lngLat.lng, lngLat.lat], zoom: 4, speed: 1.1 });
+    return;
+  }
+
+  const bounds = new maplibregl.LngLatBounds();
+  visibleMarkers.forEach((markerObj) => {
+    bounds.extend(markerObj.marker.getLngLat());
+  });
+
+  map.fitBounds(bounds, { padding: 60, maxZoom: 4, duration: 800 });
 }
 
 function ensureSelectedEvent(filteredEvents) {
@@ -620,8 +699,11 @@ function updateUI(shouldFitMap = true) {
   }
 
   if (activeEvent) {
-    const marker = markers.get(activeEvent.id);
-    marker.setPopupContent(popupTemplate(activeEvent));
+    const markerObj = markers.get(activeEvent.id);
+    if (markerObj) {
+      markerObj.popup.setHTML(popupTemplate(activeEvent));
+      markerObj.popup.addTo(map);
+    }
   }
 }
 
@@ -635,11 +717,12 @@ function focusEvent(eventId) {
   state.selectedId = eventId;
   updateUI(false);
 
-  const marker = markers.get(eventId);
-  map.flyTo(event.coords, Math.max(map.getZoom(), 4), {
-    duration: 1.1
-  });
-  marker.openPopup();
+  const markerObj = markers.get(eventId);
+  if (markerObj) {
+    const coords = [event.coords[1], event.coords[0]];
+    map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 4), speed: 1.1 });
+    markerObj.popup.addTo(map);
+  }
 }
 
 function toggleStoryMode() {
@@ -719,28 +802,23 @@ function bindControls() {
   });
 }
 
-createMarkers();
 renderYearButtons();
 bindControls();
 
 state.selectedId = events[0].id;
-updateUI(true);
-
-map.whenReady(() => {
-  window.requestAnimationFrame(() => {
-    map.invalidateSize();
-  });
-});
 
 window.addEventListener("load", () => {
-  window.setTimeout(() => {
-    map.invalidateSize();
-  }, 150);
+  if (map) {
+    window.setTimeout(() => {
+      map.resize();
+    }, 150);
+  }
 });
 
-// Kur layout-i ndryshon, Leaflet ka nevojë të rifreskojë madhësinë e hartës.
 window.addEventListener("resize", () => {
-  window.requestAnimationFrame(() => {
-    map.invalidateSize();
-  });
+  if (map) {
+    window.requestAnimationFrame(() => {
+      map.resize();
+    });
+  }
 });
