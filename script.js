@@ -803,22 +803,42 @@ function bindControls() {
   });
 
   // Legend item click handlers
+  let legendPopup = null;
+  
   document.querySelectorAll(".legend-item").forEach((item) => {
-    const type = item.dataset.type;
-    const popup = item.querySelector(".legend-popup");
-    const countSpan = popup.querySelector(".popup-count");
-    
-    // Calculate and display count
-    const typeCount = events.filter((e) => e.type === type).length;
-    countSpan.textContent = `${typeCount} ngjarje`;
-    
     item.addEventListener("click", (e) => {
       e.stopPropagation();
+      const type = item.dataset.type;
       
-      // Toggle popup visibility
-      const isVisible = popup.style.display === "block";
-      document.querySelectorAll(".legend-popup").forEach((p) => (p.style.display = "none"));
-      popup.style.display = isVisible ? "none" : "block";
+      // Get all events of this type
+      const typeEvents = events.filter((event) => event.type === type);
+      const typeLabel = getTypeLabel(type);
+      const typeCount = typeEvents.length;
+      
+      // Create popup content
+      const popupHTML = `
+        <div class="popup-card">
+          <h3>${typeLabel}</h3>
+          <p class="popup-meta">${typeCount} ngjarje</p>
+          <hr style="margin: 8px 0; opacity: 0.3;">
+          <p class="popup-desc" style="font-size: 0.85rem; margin: 8px 0 0;">Kliko në hartë për të parë ngjarjet e këtij lloji</p>
+        </div>
+      `;
+      
+      // Close existing popup if any
+      if (legendPopup) {
+        legendPopup.remove();
+      }
+      
+      // Create new popup at legend location
+      legendPopup = new maplibregl.Popup({
+        offset: [0, 20],
+        closeButton: true,
+        closeOnClick: true
+      })
+        .setHTML(popupHTML)
+        .setLngLat([19.8171, 41.3275])
+        .addTo(map);
       
       // Toggle filter
       if (state.type === type) {
@@ -832,13 +852,6 @@ function bindControls() {
       
       updateUI(true);
     });
-  });
-  
-  // Close popups when clicking elsewhere
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".legend-item")) {
-      document.querySelectorAll(".legend-popup").forEach((p) => (p.style.display = "none"));
-    }
   });
 }
 
