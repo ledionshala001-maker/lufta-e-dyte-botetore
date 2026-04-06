@@ -53,7 +53,7 @@ async function initMap() {
     attributionControl: false
   });
 
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
 
   map.on("load", () => {
     createMarkers();
@@ -766,6 +766,7 @@ function resetFilters() {
   state.year = "all";
   state.search = "";
   searchInput.value = "";
+  document.querySelectorAll(".legend-item").forEach((item) => item.classList.remove("active"));
   updateUI(true);
 }
 
@@ -799,6 +800,25 @@ function bindControls() {
     }
 
     resetFilters();
+  });
+
+  // Legend item click handlers
+  document.querySelectorAll(".legend-item").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const type = item.dataset.type;
+      
+      if (state.type === type) {
+        state.type = "all";
+        item.classList.remove("active");
+      } else {
+        document.querySelectorAll(".legend-item").forEach((li) => li.classList.remove("active"));
+        state.type = type;
+        item.classList.add("active");
+      }
+      
+      updateUI(true);
+    });
   });
 }
 
