@@ -452,12 +452,6 @@ h2 {
   color: #362212;
 }
 
-.server-note {
-  margin: -2px 4px 0;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
 .map-frame {
   position: relative;
   min-height: 58vh;
@@ -523,6 +517,26 @@ h2 {
 .event-marker.active {
   transform: scale(1.15);
   box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.26);
+}
+
+.country-label-icon {
+  background: transparent;
+  border: none;
+}
+
+.country-label {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 250, 241, 0.74);
+  color: #4a3523;
+  border: 1px solid rgba(74, 53, 35, 0.12);
+  box-shadow: 0 4px 10px rgba(38, 28, 20, 0.08);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
 }
 
 .leaflet-popup-content-wrapper {

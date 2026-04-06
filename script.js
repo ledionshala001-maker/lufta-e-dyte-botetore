@@ -9,6 +9,12 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   referrerPolicy: "strict-origin-when-cross-origin"
 }).addTo(map);
 
+const countryLabelLayer = L.layerGroup().addTo(map);
+const countryLabelMarkers = [];
+const regionNames = typeof Intl !== "undefined" && Intl.DisplayNames
+  ? new Intl.DisplayNames(["sq"], { type: "region" })
+  : null;
+
 // Të dhënat janë renditur sipas kohës që lista dhe "story mode" të ecin natyrshëm.
 const events = [
   {
@@ -426,6 +432,88 @@ function getTypeLabel(type) {
   return labels[type];
 }
 
+function escapeHtml(text) {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function getCountryLabel(country) {
+  if (country.translations?.sqi?.common) {
+    return country.translations.sqi.common;
+  }
+
+  if (country.translations?.alb?.common) {
+    return country.translations.alb.common;
+  }
+
+  if (regionNames && country.cca2 && country.cca2.length === 2) {
+    return regionNames.of(country.cca2) || country.name?.common;
+  }
+
+  return country.name?.common || "";
+}
+
+function updateCountryLabels() {
+  countryLabelLayer.clearLayers();
+
+  const zoom = map.getZoom();
+
+  if (zoom < 2 || zoom > 5) {
+    return;
+  }
+
+  const bounds = map.getBounds().pad(0.35);
+
+  countryLabelMarkers.forEach((marker) => {
+    if (bounds.contains(marker.getLatLng())) {
+      countryLabelLayer.addLayer(marker);
+    }
+  });
+}
+
+async function loadCountryLabels() {
+  try {
+    const response = await fetch("https://restcountries.com/v3.1/all?fields=cca2,name,translations,latlng");
+
+    if (!response.ok) {
+      throw new Error("Nuk u ngarkuan emrat e shteteve.");
+    }
+
+    const countries = await response.json();
+
+    countries.forEach((country) => {
+      if (!Array.isArray(country.latlng) || country.latlng.length < 2) {
+        return;
+      }
+
+      const label = getCountryLabel(country);
+
+      if (!label) {
+        return;
+      }
+
+      const marker = L.marker([country.latlng[0], country.latlng[1]], {
+        interactive: false,
+        keyboard: false,
+        icon: L.divIcon({
+          className: "country-label-icon",
+          html: `<span class="country-label">${escapeHtml(label)}</span>`
+        })
+      });
+
+      countryLabelMarkers.push(marker);
+    });
+
+    updateCountryLabels();
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
 function createMarkerIcon(type, isActive = false) {
   const activeClass = isActive ? "active" : "";
 
@@ -745,3 +833,7 @@ window.addEventListener("resize", () => {
     map.invalidateSize();
   });
 });
+
+map.on("zoomend moveend", updateCountryLabels);
+
+loadCountryLabels();
