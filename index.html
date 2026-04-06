@@ -105,35 +105,37 @@
       </section>
     </aside>
 
-    <main class="map-stage">
-      <div class="map-topbar">
-        <div>
-          <p class="map-kicker">Hyr në histori</p>
-          <h2>Shiko si lëviz lufta nga muaji në muaj</h2>
+    <section class="map-column">
+      <main class="map-stage">
+        <div class="map-topbar">
+          <div>
+            <p class="map-kicker">Hyr në histori</p>
+            <h2>Shiko si lëviz lufta nga muaji në muaj</h2>
+          </div>
+          <div class="topbar-actions">
+            <button id="showAllBtn" class="topbar-btn" type="button">Shfaq Të Gjitha në Hartë</button>
+          </div>
         </div>
-        <div class="topbar-actions">
-          <button id="showAllBtn" class="topbar-btn" type="button">Shfaq Të Gjitha në Hartë</button>
-        </div>
-      </div>
 
-      <div class="map-frame">
-        <div id="map" aria-label="Hartë interaktive me ngjarjet kryesore të Luftës së Dytë Botërore"></div>
+        <div class="map-frame">
+          <div id="map" aria-label="Hartë interaktive me ngjarjet kryesore të Luftës së Dytë Botërore"></div>
 
-        <div class="map-overlay legend-panel">
-          <p class="overlay-title">Legjenda</p>
-          <ul>
-            <li><span class="legend-dot sulm"></span>Sulm</li>
-            <li><span class="legend-dot beteje"></span>Betejë</li>
-            <li><span class="legend-dot kthese"></span>Pikë kthese</li>
-          </ul>
+          <div class="map-overlay legend-panel">
+            <p class="overlay-title">Legjenda</p>
+            <ul>
+              <li><span class="legend-dot sulm"></span>Sulm</li>
+              <li><span class="legend-dot beteje"></span>Betejë</li>
+              <li><span class="legend-dot kthese"></span>Pikë kthese</li>
+            </ul>
+          </div>
         </div>
-      </div>
+      </main>
 
       <section class="map-help-card">
         <p class="overlay-title">Si ta përdorësh</p>
         <p>Kliko shenjat në hartë, ose kartelat në listë. Filtrat sipër të ndihmojnë ta tregosh luftën me rend dhe qartë.</p>
       </section>
-    </main>
+    </section>
   </div>
 
   <!-- Leaflet JS -->

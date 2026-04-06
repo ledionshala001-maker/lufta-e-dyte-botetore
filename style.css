@@ -62,6 +62,12 @@ input {
   align-items: start;
 }
 
+.map-column {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
 .sidebar {
   display: grid;
   gap: 16px;
@@ -417,7 +423,7 @@ h2 {
 
 .map-stage {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 14px;
   position: sticky;
   top: 18px;
@@ -454,8 +460,8 @@ h2 {
 
 .map-frame {
   position: relative;
-  min-height: 58vh;
-  height: calc(100vh - 210px);
+  min-height: 0;
+  height: 100%;
   border-radius: 32px;
   overflow: hidden;
   box-shadow: var(--shadow-lg);
@@ -466,7 +472,7 @@ h2 {
 #map {
   width: 100%;
   height: 100%;
-  min-height: 58vh;
+  min-height: 52vh;
 }
 
 .map-overlay {
@@ -507,8 +513,12 @@ h2 {
   box-shadow: var(--shadow-md);
 }
 
+.map-help-card .overlay-title {
+  margin-bottom: 8px;
+}
+
 .map-help-card p:last-child {
-  margin: 8px 0 0;
+  margin: 0;
   line-height: 1.55;
   color: var(--muted);
 }
@@ -561,6 +571,10 @@ h2 {
     grid-template-columns: 1fr;
   }
 
+  .map-column {
+    gap: 12px;
+  }
+
   .sidebar {
     max-height: none;
     overflow: visible;
@@ -576,6 +590,10 @@ h2 {
     max-height: 28vh;
   }
 
+  .map-frame {
+    height: auto;
+  }
+
   .map-frame,
   #map {
     min-height: 68vh;
@@ -588,6 +606,11 @@ h2 {
     padding: 12px;
   }
 
+  .sidebar,
+  .map-column {
+    gap: 12px;
+  }
+
   .stats {
     grid-template-columns: 1fr;
   }
@@ -595,6 +618,7 @@ h2 {
   .map-topbar {
     flex-direction: column;
     align-items: flex-start;
+    padding: 18px;
   }
 
   .topbar-actions {
@@ -612,6 +636,15 @@ h2 {
     top: 14px;
     right: 14px;
     left: 14px;
+  }
+
+  .legend-panel ul {
+    gap: 6px;
+  }
+
+  .map-help-card {
+    padding: 14px 16px;
+    border-radius: 18px;
   }
 
   #map {

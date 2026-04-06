@@ -77,6 +77,7 @@ Aktualisht projekti përfshin:
 - hartë më të qëndrueshme gjatë scroll-it
 - ngjarje të shumta historike në vende të ndryshme të botës
 - panel udhëzues poshtë hartës
+- responsive layout për desktop dhe mobile
 
 ## Mirëmbajtja e README
 
