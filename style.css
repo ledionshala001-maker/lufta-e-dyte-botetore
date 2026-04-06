@@ -221,6 +221,31 @@ input {
   margin-top: 14px;
 }
 
+.school-card,
+.class-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 8px;
+}
+
+.school-card h3,
+.class-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.school-card p,
+.class-card p {
+  margin: 4px 0 0;
+  color: rgba(255, 246, 234, 0.78);
+  line-height: 1.5;
+}
+
 .sidebar {
   display: grid;
   gap: 16px;
