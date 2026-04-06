@@ -695,33 +695,6 @@ h2 {
   box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.26);
 }
 
-.map-label {
-  white-space: nowrap;
-  font-family: "Cinzel", serif;
-  letter-spacing: 0.01em;
-  color: rgba(42, 30, 19, 0.8);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 12px rgba(255, 252, 244, 0.92);
-  transform: translate(-50%, -50%);
-}
-
-.map-label span {
-  display: inline-block;
-  line-height: 1.1;
-}
-
-.map-label-country {
-  font-size: clamp(0.62rem, 0.63vw, 0.82rem);
-  font-weight: 600;
-}
-
-.map-label-continent {
-  font-size: clamp(0.72rem, 0.78vw, 0.98rem);
-  font-weight: 700;
-  color: rgba(81, 53, 28, 0.88);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
 .leaflet-popup-content-wrapper {
   border-radius: 18px;
   background: #fffaf2;

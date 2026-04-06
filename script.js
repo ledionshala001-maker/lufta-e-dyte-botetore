@@ -8,57 +8,6 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   referrerPolicy: "strict-origin-when-cross-origin"
 }).addTo(map);
 
-map.createPane("albanianLabelsPane");
-map.getPane("albanianLabelsPane").style.zIndex = "420";
-map.getPane("albanianLabelsPane").style.pointerEvents = "none";
-
-const albanianCountryLabels = [
-  { name: "Shtetet e Bashkuara të Amerikës", coords: [39.5, -98.5] },
-  { name: "Kanada", coords: [57, -106] },
-  { name: "Meksikë", coords: [23.5, -102] },
-  { name: "Brazil", coords: [-10, -52] },
-  { name: "Argjentinë", coords: [-38.5, -64] },
-  { name: "Mbretëria e Bashkuar", coords: [54.8, -2.8] },
-  { name: "Irlandë", coords: [53.2, -8.1] },
-  { name: "Portugali", coords: [39.7, -8] },
-  { name: "Spanjë", coords: [40.1, -3.7] },
-  { name: "Francë", coords: [46.5, 2.2] },
-  { name: "Belgjikë", coords: [50.8, 4.7] },
-  { name: "Holandë", coords: [52.2, 5.4] },
-  { name: "Gjermani", coords: [51, 10.2] },
-  { name: "Danimarkë", coords: [56.2, 9.5] },
-  { name: "Norvegji", coords: [62.2, 9.8] },
-  { name: "Suedi", coords: [62, 15] },
-  { name: "Finlandë", coords: [64.8, 26] },
-  { name: "Poloni", coords: [52, 19.2] },
-  { name: "Ukrainë", coords: [49, 31.4] },
-  { name: "Bjellorusi", coords: [53.6, 27.9] },
-  { name: "Rusi", coords: [61, 95] },
-  { name: "Itali", coords: [42.7, 12.8] },
-  { name: "Shqipëri", coords: [41.15, 20.1] },
-  { name: "Greqi", coords: [39.2, 22.8] },
-  { name: "Turqi", coords: [39.1, 35] },
-  { name: "Egjipt", coords: [27, 30.6] },
-  { name: "Marok", coords: [31.8, -6.1] },
-  { name: "Algjeri", coords: [28.3, 2.7] },
-  { name: "Afrika e Jugut", coords: [-29.3, 24.4] },
-  { name: "Arabia Saudite", coords: [23.7, 44.5] },
-  { name: "Iran", coords: [32.3, 53.7] },
-  { name: "Indi", coords: [22.6, 79.6] },
-  { name: "Kinë", coords: [35.5, 104.4] },
-  { name: "Japoni", coords: [37.7, 138.3] },
-  { name: "Australi", coords: [-25.5, 133.7] }
-];
-
-const albanianContinentLabels = [
-  { name: "Evropa", coords: [54, 18] },
-  { name: "Azia", coords: [35, 90] },
-  { name: "Afrika", coords: [2, 20] },
-  { name: "Amerika e Veriut", coords: [49, -105] },
-  { name: "Amerika e Jugut", coords: [-18, -61] },
-  { name: "Oqeania", coords: [-24, 146] }
-];
-
 // Të dhënat janë renditur sipas kohës që lista dhe "story mode" të ecin natyrshëm.
 const events = [
   {
@@ -488,34 +437,6 @@ function createMarkerIcon(type, isActive = false) {
   });
 }
 
-function createAlbanianLabelIcon(name, labelType) {
-  return L.divIcon({
-    className: `map-label map-label-${labelType}`,
-    html: `<span>${name}</span>`,
-    iconAnchor: [0, 0]
-  });
-}
-
-function createAlbanianMapLabels() {
-  albanianCountryLabels.forEach((country) => {
-    L.marker(country.coords, {
-      icon: createAlbanianLabelIcon(country.name, "country"),
-      pane: "albanianLabelsPane",
-      interactive: false,
-      keyboard: false
-    }).addTo(map);
-  });
-
-  albanianContinentLabels.forEach((continent) => {
-    L.marker(continent.coords, {
-      icon: createAlbanianLabelIcon(continent.name, "continent"),
-      pane: "albanianLabelsPane",
-      interactive: false,
-      keyboard: false
-    }).addTo(map);
-  });
-}
-
 function popupTemplate(event) {
   return `
     <div class="popup-card">
@@ -798,7 +719,6 @@ function bindControls() {
   });
 }
 
-createAlbanianMapLabels();
 createMarkers();
 renderYearButtons();
 bindControls();
