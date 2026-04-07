@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Harta Interaktive e Luftës së Dytë Botërore</title>
+
+  <!-- Fonte me pak më shumë ndjesi historike -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  >
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <aside class="sidebar">
+      <div class="hero-card">
+        <p class="eyebrow">Projekt Shkolle</p>
+        <h1>Harta Interaktive e Luftës së Dytë Botërore</h1>
+        <p class="intro">
+          Kjo faqe tregon si u përhap lufta në vende të ndryshme të botës. Mund të klikosh
+          ngjarjet në hartë ose në listë dhe ta ndjekësh historinë hap pas hapi.
+        </p>
+
+        <div class="stats">
+          <article class="stat-box">
+            <span id="statVisible" class="stat-number">0</span>
+            <span class="stat-label">ngjarje në pamje</span>
+          </article>
+          <article class="stat-box">
+            <span id="statYears" class="stat-number">0</span>
+            <span class="stat-label">vite lufte</span>
+          </article>
+          <article class="stat-box">
+            <span id="statFronts" class="stat-number">0</span>
+            <span class="stat-label">fronte kryesore</span>
+          </article>
+        </div>
+      </div>
+
+      <section class="control-card">
+        <div class="section-title-row">
+          <h2>Filtro Ngjarjet</h2>
+          <button id="resetFiltersBtn" class="ghost-btn" type="button">Rivendos</button>
+        </div>
+
+        <label class="search-label" for="searchInput">Kërko sipas emrit ose vendit</label>
+        <input id="searchInput" class="search-input" type="search" placeholder="P.sh. Normandi, Berlin, Pearl Harbor">
+
+        <div class="control-group">
+          <p class="control-label">Sipas fazës së luftës</p>
+          <div class="chip-row" id="periodFilters">
+            <button class="chip-btn active" data-filter-group="period" data-value="all">Të gjitha</button>
+            <button class="chip-btn" data-filter-group="period" data-value="fillimi">Fillimi 1939-1941</button>
+            <button class="chip-btn" data-filter-group="period" data-value="mesi">Mesi 1942-1943</button>
+            <button class="chip-btn" data-filter-group="period" data-value="fundi">Fundi 1944-1945</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <p class="control-label">Sipas llojit</p>
+          <div class="chip-row" id="typeFilters">
+            <button class="chip-btn active" data-filter-group="type" data-value="all">Të gjitha</button>
+            <button class="chip-btn" data-filter-group="type" data-value="sulm">Sulm</button>
+            <button class="chip-btn" data-filter-group="type" data-value="beteje">Betejë</button>
+            <button class="chip-btn" data-filter-group="type" data-value="kthese">Pikë kthese</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="section-title-row compact">
+            <p class="control-label">Sipas vitit</p>
+            <span class="tiny-note">klik për fokus</span>
+          </div>
+          <div class="year-row" id="yearFilters"></div>
+        </div>
+      </section>
+
+      <section class="selected-card">
+        <div class="section-title-row">
+          <h2>Ngjarja e Zgjedhur</h2>
+          <button id="storyBtn" class="story-btn" type="button">Luaj Kronologjinë</button>
+        </div>
+        <div id="selectedEvent" class="selected-event">
+          <p class="selected-empty">Zgjidh një ngjarje në hartë ose në listë që të shohësh më shumë detaje.</p>
+        </div>
+      </section>
+
+      <section class="list-card">
+        <div class="section-title-row">
+          <h2>Rrjedha e Ngjarjeve</h2>
+          <span id="resultCount" class="result-count">0 ngjarje</span>
+        </div>
+        <div id="eventList" class="event-list"></div>
+      </section>
+    </aside>
+
+    <section class="map-column">
+      <main class="map-shell-card">
+        <div class="map-topbar">
+          <div>
+            <p class="map-kicker">Hyr në histori</p>
+            <h2>Shiko si lëviz lufta nga muaji në muaj</h2>
+          </div>
+          <div class="topbar-actions">
+            <button id="showAllBtn" class="topbar-btn" type="button">Shfaq Të Gjitha në Hartë</button>
+          </div>
+        </div>
+
+        <div class="map-frame">
+          <div id="map" aria-label="Hartë interaktive me ngjarjet kryesore të Luftës së Dytë Botërore"></div>
+
+          <div class="map-overlay legend-panel">
+            <p class="overlay-title">Legjenda</p>
+            <ul>
+              <li><span class="legend-dot sulm"></span>Sulm</li>
+              <li><span class="legend-dot beteje"></span>Betejë</li>
+              <li><span class="legend-dot kthese"></span>Pikë kthese</li>
+            </ul>
+          </div>
+        </div>
+      </main>
+
+      <section class="map-help-card">
+        <p class="help-title">Si ta përdorësh</p>
+        <p>Kliko shenjat në hartë, ose kartelat në listë. Filtrat sipër të ndihmojnë ta tregosh luftën me rend dhe qartë.</p>
+      </section>
+    </section>
+  </div>
+
+  <footer class="site-footer" aria-label="Kreditet e projektit">
+    <div class="footer-card">
+      <div class="footer-header">
+        <div>
+          <p class="footer-kicker">Kreditet e Projektit</p>
+          <h2>Ky prezantim u ndërtua si punë ekipore me udhëzim dhe mbështetje profesionale.</h2>
+        </div>
+        <p class="footer-note">Lufta e Dytë Botërore, e treguar në mënyrë vizuale për prezantim në klasë.</p>
+      </div>
+
+      <div class="footer-grid">
+        <section class="footer-panel footer-panel-students">
+          <div class="footer-panel-head">
+            <p class="footer-label">Ekipi i Nxënësve</p>
+            <span class="footer-count">4</span>
+          </div>
+
+          <div class="person-grid">
+            <article class="person-card">
+              <span class="person-badge">LS</span>
+              <div>
+                <h3>Ledion Shala</h3>
+                <p>Nxënës</p>
+              </div>
+            </article>
+
+            <article class="person-card">
+              <span class="person-badge">OJ</span>
+              <div>
+                <h3>Olti Jusufi</h3>
+                <p>Nxënës</p>
+              </div>
+            </article>
+
+            <article class="person-card">
+              <span class="person-badge">VU</span>
+              <div>
+                <h3>Vesa Ujkani</h3>
+                <p>Nxënëse</p>
+              </div>
+            </article>
+
+            <article class="person-card">
+              <span class="person-badge">RH</span>
+              <div>
+                <h3>Ruvejda Hetemi</h3>
+                <p>Nxënëse</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="footer-panel footer-panel-professor">
+          <div class="footer-panel-head">
+            <p class="footer-label">Mentorim</p>
+            <span class="footer-count">Prof.</span>
+          </div>
+
+          <article class="mentor-card">
+            <span class="mentor-badge">LH</span>
+            <div>
+              <h3>Lulzim Hajzeri</h3>
+              <p>Profesor dhe mbështetës i projektit</p>
+            </div>
+          </article>
+
+          <p class="mentor-note">Ky projekt u formësua si një prezantim i qartë, vizual dhe i lehtë për t’u shpjeguar në klasë.</p>
+        </section>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="script.js"></script>
+</body>
+</html>

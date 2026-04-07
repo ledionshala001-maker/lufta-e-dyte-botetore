@@ -79,6 +79,31 @@ Aktualisht projekti përfshin:
 - rrjedhë më e pastër e seksionit të hartës me panel udhëzues të ndarë poshtë saj
 - responsive layout për desktop dhe mobile
 - footer modern me kreditet e nxënësve dhe profesorit
+- zoom me rrotën e mausit në hartë
+
+## Gjendja e ruajtur për vazhdim
+
+Projekti është kthyer në versionin origjinal me:
+
+- `Leaflet.js`
+- `OpenStreetMap` raster tiles
+- popup-et dhe sjelljen origjinale të marker-ave
+
+Gjithashtu janë ruajtur kopje rezervë të këtij versioni:
+
+- `index.leaflet-backup.html`
+- `script.leaflet-backup.js`
+- `style.leaflet-backup.css`
+
+Kjo do të thotë që herën tjetër mund të vazhdojmë nga kjo pikë pa humbur gjendjen aktuale.
+
+## Ide të hapura për seancën tjetër
+
+Opsionet e lëna për më vonë janë:
+
+1. Të mbajmë hartën origjinale dhe të shtojmë etiketa dygjuhëshe vetëm për vendet e ngjarjeve.
+2. Të kalojmë në një hartë vector të personalizueshme ku etiketat mund të bëhen `English / local language`.
+3. Të mbajmë hartën origjinale dhe të tregojmë formatin `English / local language` në panel, popup ose tooltip.
 
 ## Kreditet
 
