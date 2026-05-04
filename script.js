@@ -574,14 +574,16 @@ function updateStats(filteredEvents) {
   resultCount.textContent = `${filteredEvents.length} ngjarje`;
 }
 
-function renderSelectedEvent(event) {
+function renderSelectedEvent(event, isStoryMode = false) {
   if (!event) {
     selectedEvent.innerHTML = `
       <p class="selected-empty">Nuk ka një ngjarje të zgjedhur tani. Kliko një kartelë ose një shenjë në hartë.</p>
     `;
+    selectedEvent.classList.remove("story-active");
     return;
   }
 
+  selectedEvent.classList.toggle("story-active", isStoryMode);
   selectedEvent.innerHTML = `
     <h3>${event.title}</h3>
     <div class="selected-meta">
@@ -682,7 +684,7 @@ function ensureSelectedEvent(filteredEvents) {
   }
 }
 
-function updateUI(shouldFitMap = true) {
+function updateUI(shouldFitMap = true, isStoryMode = false) {
   const filteredEvents = getFilteredEvents();
   ensureSelectedEvent(filteredEvents);
 
@@ -691,7 +693,7 @@ function updateUI(shouldFitMap = true) {
 
   setActiveButtons();
   updateStats(filteredEvents);
-  renderSelectedEvent(activeEvent);
+  renderSelectedEvent(activeEvent, isStoryMode);
   renderEventList(filteredEvents);
 
   if (shouldFitMap) {
@@ -707,7 +709,7 @@ function updateUI(shouldFitMap = true) {
   }
 }
 
-function focusEvent(eventId) {
+function focusEvent(eventId, isStoryMode = false) {
   const event = events.find((item) => item.id === eventId);
 
   if (!event) {
@@ -715,7 +717,7 @@ function focusEvent(eventId) {
   }
 
   state.selectedId = eventId;
-  updateUI(false);
+  updateUI(false, isStoryMode);
 
   const markerObj = markers.get(eventId);
   if (markerObj) {
@@ -732,20 +734,36 @@ function toggleStoryMode() {
     return;
   }
 
+  const storyProgress = document.getElementById("storyProgress");
+  const progressFill = document.getElementById("progressFill");
+  const progressText = document.getElementById("progressText");
+
   if (state.storyPlaying) {
     window.clearInterval(state.storyTimer);
     state.storyPlaying = false;
     storyBtn.textContent = "Luaj Kronologjinë";
+    storyBtn.classList.remove("playing");
+    storyProgress.style.display = "none";
     return;
   }
 
   state.storyPlaying = true;
   storyBtn.textContent = "Ndalo";
+  storyBtn.classList.add("playing");
+  storyProgress.style.display = "block";
 
   const currentIndex = filteredEvents.findIndex((event) => event.id === state.selectedId);
   state.storyIndex = currentIndex >= 0 ? currentIndex : 0;
 
-  focusEvent(filteredEvents[state.storyIndex].id);
+  focusEvent(filteredEvents[state.storyIndex].id, true);
+
+  // Update progress display
+  const updateProgress = () => {
+    const percentage = ((state.storyIndex + 1) / filteredEvents.length) * 100;
+    progressFill.style.width = percentage + "%";
+    progressText.textContent = `Ngjarja ${state.storyIndex + 1} nga ${filteredEvents.length}`;
+  };
+  updateProgress();
 
   state.storyTimer = window.setInterval(() => {
     const currentFiltered = getFilteredEvents();
@@ -756,8 +774,9 @@ function toggleStoryMode() {
     }
 
     state.storyIndex = (state.storyIndex + 1) % currentFiltered.length;
-    focusEvent(currentFiltered[state.storyIndex].id);
-  }, 3200);
+    focusEvent(currentFiltered[state.storyIndex].id, true);
+    updateProgress();
+  }, 5500);
 }
 
 function resetFilters() {

@@ -385,6 +385,14 @@ h2 {
   border-radius: 999px;
   background: #fff;
   box-shadow: 0 8px 18px rgba(38, 28, 20, 0.08);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.story-btn.playing {
+  background: linear-gradient(135deg, #d17d6f, #c56c5f);
+  color: #fff9f0;
+  box-shadow: 0 10px 24px rgba(209, 125, 111, 0.28);
 }
 
 .ghost-btn:hover,
@@ -457,11 +465,52 @@ h2 {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(245, 233, 213, 0.7));
   border: 1px solid var(--line);
   min-height: 160px;
+  transition: all 0.3s ease;
+}
+
+.selected-event.story-active {
+  background: linear-gradient(180deg, #fffaf0, #fef5e7);
+  border: 2px solid var(--accent);
+  box-shadow: 0 8px 24px rgba(142, 90, 52, 0.16);
+  padding: 20px;
 }
 
 .selected-event h3 {
   margin: 0 0 8px;
   font-size: 1.2rem;
+  transition: font-size 0.3s ease;
+}
+
+.selected-event.story-active h3 {
+  font-size: 1.5rem;
+}
+
+.story-progress {
+  margin-top: 12px;
+  padding: 12px 0;
+}
+
+.progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(142, 90, 52, 0.2);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #d9b07c);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+  font-weight: 600;
+  text-align: center;
 }
 
 .selected-meta {
@@ -485,6 +534,24 @@ h2 {
 .leaflet-popup-content p {
   line-height: 1.55;
   color: var(--muted);
+}
+
+.selected-event.story-active .selected-text {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.selected-event.story-active .selected-meta {
+  gap: 10px;
+}
+
+.selected-event.story-active .meta-pill {
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(142, 90, 52, 0.15), rgba(217, 176, 124, 0.1));
+  border: 1px solid rgba(142, 90, 52, 0.3);
+  font-weight: 500;
 }
 
 .result-count {
