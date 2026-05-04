@@ -517,6 +517,11 @@ function createMarkers() {
       state.selectedId = event.id;
       updateUI(false);
       popup.addTo(map);
+      
+      // Show story controls when a marker is clicked
+      if (!state.storyPlaying) {
+        showStoryControls();
+      }
     });
 
     markers.set(event.id, {
@@ -625,6 +630,11 @@ function renderEventList(filteredEvents) {
   document.querySelectorAll(".event-card").forEach((card) => {
     card.addEventListener("click", () => {
       focusEvent(card.dataset.eventId);
+      
+      // Show story controls when an event card is clicked
+      if (!state.storyPlaying) {
+        showStoryControls();
+      }
     });
   });
 }
@@ -727,6 +737,16 @@ function focusEvent(eventId, isStoryMode = false) {
   }
 }
 
+function showStoryControls() {
+  const storyControls = document.getElementById("storyControls");
+  storyControls.style.display = "grid";
+}
+
+function hideStoryControls() {
+  const storyControls = document.getElementById("storyControls");
+  storyControls.style.display = "none";
+}
+
 function toggleStoryMode() {
   const filteredEvents = getFilteredEvents();
 
@@ -744,6 +764,7 @@ function toggleStoryMode() {
     storyBtn.textContent = "Luaj Kronologjinë";
     storyBtn.classList.remove("playing");
     storyProgress.style.display = "none";
+    showStoryControls();
     return;
   }
 
@@ -751,6 +772,7 @@ function toggleStoryMode() {
   storyBtn.textContent = "Ndalo";
   storyBtn.classList.add("playing");
   storyProgress.style.display = "block";
+  hideStoryControls();
 
   const currentIndex = filteredEvents.findIndex((event) => event.id === state.selectedId);
   state.storyIndex = currentIndex >= 0 ? currentIndex : 0;
@@ -808,6 +830,34 @@ function bindControls() {
   });
 
   storyBtn.addEventListener("click", toggleStoryMode);
+
+  // Story control buttons
+  const playFromStartBtn = document.getElementById("playFromStartBtn");
+  const continuePlayBtn = document.getElementById("continuePlayBtn");
+
+  playFromStartBtn.addEventListener("click", () => {
+    const filteredEvents = getFilteredEvents();
+    if (filteredEvents.length === 0) return;
+    
+    // Set to first event
+    state.storyIndex = 0;
+    state.selectedId = filteredEvents[0].id;
+    
+    // Start playing from beginning
+    toggleStoryMode();
+  });
+
+  continuePlayBtn.addEventListener("click", () => {
+    const filteredEvents = getFilteredEvents();
+    if (filteredEvents.length === 0) return;
+    
+    // Continue from current event
+    const currentIndex = filteredEvents.findIndex((event) => event.id === state.selectedId);
+    state.storyIndex = currentIndex >= 0 ? currentIndex : 0;
+    
+    // Start playing from current position
+    toggleStoryMode();
+  });
 
   showAllBtn.addEventListener("click", () => {
     fitMapToMarkers(updateMarkers(getFilteredEvents()));

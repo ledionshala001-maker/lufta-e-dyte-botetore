@@ -513,7 +513,59 @@ h2 {
   text-align: center;
 }
 
-.selected-meta {
+.story-controls {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.story-control-btn {
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.story-control-btn.start {
+  background: linear-gradient(135deg, #8e5a34, #a77713);
+  color: #fff9f0;
+  box-shadow: 0 6px 16px rgba(142, 90, 52, 0.2);
+}
+
+.story-control-btn.continue {
+  background: linear-gradient(135deg, #6b8e34, #8fa713);
+  color: #fff9f0;
+  box-shadow: 0 6px 16px rgba(107, 142, 52, 0.2);
+}
+
+.story-control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(142, 90, 52, 0.3);
+}
+
+.story-control-btn.start:hover {
+  box-shadow: 0 10px 24px rgba(142, 90, 52, 0.3);
+}
+
+.story-control-btn.continue:hover {
+  box-shadow: 0 10px 24px rgba(107, 142, 52, 0.3);
+}
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
