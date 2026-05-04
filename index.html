@@ -11,14 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  >
-
+  <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -123,9 +116,18 @@
           <div class="map-overlay legend-panel">
             <p class="overlay-title">Legjenda</p>
             <ul>
-              <li><span class="legend-dot sulm"></span>Sulm</li>
-              <li><span class="legend-dot beteje"></span>Betejë</li>
-              <li><span class="legend-dot kthese"></span>Pikë kthese</li>
+              <li class="legend-item" data-type="sulm">
+                <span class="legend-dot sulm"></span>
+                <span class="legend-label">Sulm</span>
+              </li>
+              <li class="legend-item" data-type="beteje">
+                <span class="legend-dot beteje"></span>
+                <span class="legend-label">Betejë</span>
+              </li>
+              <li class="legend-item" data-type="kthese">
+                <span class="legend-dot kthese"></span>
+                <span class="legend-label">Pikë kthese</span>
+              </li>
             </ul>
           </div>
         </div>
@@ -145,7 +147,7 @@
           <p class="footer-kicker">Kreditet e Projektit</p>
           <h2>Ky prezantim u ndërtua si punë ekipore me udhëzim dhe mbështetje profesionale.</h2>
         </div>
-        <p class="footer-note">Lufta e Dytë Botërore, e treguar në mënyrë vizuale për prezantim.</p>
+        <p class="footer-note">Lufta e Dytë Botërore, e treguar në mënyrë vizuale për prezantim në klasë.</p>
       </div>
 
       <div class="footer-grid">
@@ -196,37 +198,32 @@
             </div>
           </article>
 
-          <p class="mentor-note">Ky projekt u formësua si një prezantim i qartë, vizual dhe i lehtë për t’u shpjeguar.
-            
-          </p>
+          <p class="mentor-note">Ky projekt u formësua si një prezantim i qartë, vizual dhe i lehtë për t’u shpjeguar në klasë.</p>
         </section>
-
         <section class="footer-panel footer-panel-school">
           <div class="footer-panel-head">
-            <p class="footer-label">Shkolla dhe Klasa</p>
-            <span class="footer-count">10/1</span>
+            <p class="footer-label">Institucioni</p>
+            <span class="footer-count">Shkollë</span>
           </div>
 
-          <article class="mentor-card">
-            <img class="mentor-badge school-photo" src="Gjimnazi.svg" alt="Logo e Gjimnazit Frang Bardhi">
+          <article class="school-card">
             <div>
               <h3>Gjimnazi Frang Bardhi</h3>
-              <p>Klasa 10/1</p>
+              <p>Shkollë e mesme</p>
             </div>
           </article>
 
-          <p class="mentor-note">Viti akademik 2025/2026</p>
-        </section>
-      </div>
+          <article class="class-card">
+            <div>
+              <h3>Klasa 10/1</h3>
+              <p>Viti akademik 2025-2026</p>
+            </div>
+          </article>
+        </section>      </div>
     </div>
   </footer>
 
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

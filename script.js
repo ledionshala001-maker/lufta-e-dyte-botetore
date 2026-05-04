@@ -1,14 +1,69 @@
-const map = L.map("map", {
-  worldCopyJump: true,
-  scrollWheelZoom: true,
-}).setView([28, 15], 2);
+// If you want Albanian labels on the map, get a free MapTiler Cloud API key
+// at https://www.maptiler.com/ and replace YOUR_MAPTILER_KEY below.
+const MAPTILER_KEY = "yZn3JKo7lNscLEszvALo";
+// Using Streets-v4 style with proper English/local language support
+const mapStyleUrl = `https://api.maptiler.com/maps/streets-v4/style.json?key=${MAPTILER_KEY}`;
 
-L.tileLayer("https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=yZn3JKo7lNscLEszvALo", {
-  tileSize: 512,
-  zoomOffset: -1,
-  attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  crossOrigin: true
-}).addTo(map);
+let map;
+
+function localizeStyleField(field) {
+  if (!Array.isArray(field)) {
+    return field;
+  }
+
+  if (field[0] === "concat") {
+    return ["concat", 
+      ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]], 
+      " / ", 
+      ["get", "name:latin"]
+    ];
+  }
+
+  if (field[0] === "get" && field[1] === "name:latin") {
+    return ["concat", 
+      ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]], 
+      " / ", 
+      ["get", "name:latin"]
+    ];
+  }
+
+  return field.map(localizeStyleField);
+}
+
+function localizeMapStyle(style) {
+  style.layers.forEach((layer) => {
+    if (layer.layout && layer.layout["text-field"]) {
+      layer.layout["text-field"] = localizeStyleField(layer.layout["text-field"]);
+    }
+  });
+
+  return style;
+}
+
+async function initMap() {
+  const response = await fetch(mapStyleUrl);
+  const style = await response.json();
+  const localizedStyle = localizeMapStyle(style);
+
+  map = new maplibregl.Map({
+    container: "map",
+    style: localizedStyle,
+    center: [19.8171, 41.3275],
+    zoom: 7,
+    attributionControl: false
+  });
+
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-left");
+
+  map.on("load", () => {
+    createMarkers();
+    state.selectedId = events[0].id;
+    updateUI(true);
+    map.resize();
+  });
+}
+
+initMap();
 
 // Të dhënat janë renditur sipas kohës që lista dhe "story mode" të ecin natyrshëm.
 const events = [
@@ -19,7 +74,7 @@ const events = [
     isoDate: "1939-09-01",
     year: 1939,
     month: "Shtator",
-    place: "Warsaw / Warszawa, Poland / Polska",
+    place: "Varshavë, Poloni",
     coords: [52.2297, 21.0122],
     period: "fillimi",
     type: "sulm",
@@ -33,7 +88,7 @@ const events = [
     isoDate: "1939-09-17",
     year: 1939,
     month: "Shtator",
-    place: "Brest, Poland at the time / Polska e asaj kohe",
+    place: "Brest, Poloni e atëhershme",
     coords: [52.0976, 23.7341],
     period: "fillimi",
     type: "sulm",
@@ -47,7 +102,7 @@ const events = [
     isoDate: "1939-11-30",
     year: 1939,
     month: "Nëntor",
-    place: "Helsinki, Finland / Suomi",
+    place: "Helsinki, Finlandë",
     coords: [60.1699, 24.9384],
     period: "fillimi",
     type: "beteje",
@@ -61,7 +116,7 @@ const events = [
     isoDate: "1940-04-09",
     year: 1940,
     month: "Prill",
-    place: "Oslo, Norway / Norge",
+    place: "Oslo, Norvegji",
     coords: [59.9139, 10.7522],
     period: "fillimi",
     type: "sulm",
@@ -75,7 +130,7 @@ const events = [
     isoDate: "1940-05-10",
     year: 1940,
     month: "Maj",
-    place: "Sedan, France / France",
+    place: "Sedan, Francë",
     coords: [49.7019, 4.9403],
     period: "fillimi",
     type: "beteje",
@@ -89,7 +144,7 @@ const events = [
     isoDate: "1940-07-10",
     year: 1940,
     month: "Korrik",
-    place: "London / Londër, United Kingdom / Mbretëria e Bashkuar",
+    place: "Londër, Mbretëria e Bashkuar",
     coords: [51.5072, -0.1276],
     period: "fillimi",
     type: "beteje",
@@ -103,7 +158,7 @@ const events = [
     isoDate: "1941-04-06",
     year: 1941,
     month: "Prill",
-    place: "Belgrade / Beograd, Yugoslavia / Jugoslavija",
+    place: "Beograd, Jugosllavi",
     coords: [44.7866, 20.4489],
     period: "fillimi",
     type: "sulm",
@@ -117,7 +172,7 @@ const events = [
     isoDate: "1941-06-22",
     year: 1941,
     month: "Qershor",
-    place: "Minsk, Belarus / Belarus",
+    place: "Minsk, Bjellorusi",
     coords: [53.9006, 27.559],
     period: "fillimi",
     type: "sulm",
@@ -131,7 +186,7 @@ const events = [
     isoDate: "1941-12-07",
     year: 1941,
     month: "Dhjetor",
-    place: "Hawaii, United States / Shtetet e Bashkuara",
+    place: "Hawaii, SHBA",
     coords: [21.3649, -157.9501],
     period: "fillimi",
     type: "sulm",
@@ -145,7 +200,7 @@ const events = [
     isoDate: "1942-06-04",
     year: 1942,
     month: "Qershor",
-    place: "Midway, Pacific Ocean / Oqeani Paqësor",
+    place: "Midway, Oqeani Paqësor",
     coords: [28.2072, -177.3735],
     period: "mesi",
     type: "kthese",
@@ -159,7 +214,7 @@ const events = [
     isoDate: "1942-10-23",
     year: 1942,
     month: "Tetor",
-    place: "El Alamein, Egypt / Misr",
+    place: "El Alamein, Egjipt",
     coords: [30.8308, 28.955],
     period: "mesi",
     type: "kthese",
@@ -173,7 +228,7 @@ const events = [
     isoDate: "1942-08-23",
     year: 1942,
     month: "Gusht",
-    place: "Stalingrad, Soviet Union / Bashkimi Sovjetik",
+    place: "Stalingrad, BRSS",
     coords: [48.708, 44.5133],
     period: "mesi",
     type: "kthese",
@@ -187,7 +242,7 @@ const events = [
     isoDate: "1942-11-08",
     year: 1942,
     month: "Nëntor",
-    place: "Casablanca / Dar al-Bayda, Morocco / Al-Maghrib",
+    place: "Kazablanka, Marok",
     coords: [33.5731, -7.5898],
     period: "mesi",
     type: "sulm",
@@ -201,7 +256,7 @@ const events = [
     isoDate: "1943-04-19",
     year: 1943,
     month: "Prill",
-    place: "Warsaw / Warszawa, Poland / Polska",
+    place: "Varshavë, Poloni",
     coords: [52.2355, 21.022],
     period: "mesi",
     type: "kthese",
@@ -215,7 +270,7 @@ const events = [
     isoDate: "1943-07-10",
     year: 1943,
     month: "Korrik",
-    place: "Palermo, Italy / Italia",
+    place: "Palermo, Itali",
     coords: [38.1157, 13.3615],
     period: "mesi",
     type: "sulm",
@@ -229,7 +284,7 @@ const events = [
     isoDate: "1943-09-08",
     year: 1943,
     month: "Shtator",
-    place: "Rome / Roma, Italy / Italia",
+    place: "Romë, Itali",
     coords: [41.9028, 12.4964],
     period: "mesi",
     type: "kthese",
@@ -243,7 +298,7 @@ const events = [
     isoDate: "1944-01-27",
     year: 1944,
     month: "Janar",
-    place: "Leningrad, Soviet Union / Bashkimi Sovjetik",
+    place: "Leningrad, BRSS",
     coords: [59.9311, 30.3609],
     period: "fundi",
     type: "kthese",
@@ -257,7 +312,7 @@ const events = [
     isoDate: "1944-06-06",
     year: 1944,
     month: "Qershor",
-    place: "Normandy / Normandie, France / France",
+    place: "Normandi, Francë",
     coords: [49.3228, -0.6217],
     period: "fundi",
     type: "beteje",
@@ -271,7 +326,7 @@ const events = [
     isoDate: "1944-08-25",
     year: 1944,
     month: "Gusht",
-    place: "Paris, France / France",
+    place: "Paris, Francë",
     coords: [48.8566, 2.3522],
     period: "fundi",
     type: "kthese",
@@ -285,7 +340,7 @@ const events = [
     isoDate: "1944-10-23",
     year: 1944,
     month: "Tetor",
-    place: "Leyte, Philippines / Pilipinas",
+    place: "Leyte, Filipine",
     coords: [10.8897, 125.0147],
     period: "fundi",
     type: "kthese",
@@ -299,7 +354,7 @@ const events = [
     isoDate: "1944-12-16",
     year: 1944,
     month: "Dhjetor",
-    place: "Bastogne, Belgium / Belgique",
+    place: "Bastogne, Belgjikë",
     coords: [50.0259, 5.743],
     period: "fundi",
     type: "beteje",
@@ -313,7 +368,7 @@ const events = [
     isoDate: "1945-02-19",
     year: 1945,
     month: "Shkurt",
-    place: "Iwo Jima / Ioto, Japan / Nihon",
+    place: "Iwo Jima, Japoni",
     coords: [24.784, 141.3228],
     period: "fundi",
     type: "beteje",
@@ -327,7 +382,7 @@ const events = [
     isoDate: "1945-04-16",
     year: 1945,
     month: "Prill",
-    place: "Berlin, Germany / Deutschland",
+    place: "Berlin, Gjermani",
     coords: [52.52, 13.405],
     period: "fundi",
     type: "beteje",
@@ -341,7 +396,7 @@ const events = [
     isoDate: "1945-05-08",
     year: 1945,
     month: "Maj",
-    place: "Berlin, Germany / Deutschland",
+    place: "Berlin, Gjermani",
     coords: [52.515, 13.39],
     period: "fundi",
     type: "kthese",
@@ -355,7 +410,7 @@ const events = [
     isoDate: "1945-08-06",
     year: 1945,
     month: "Gusht",
-    place: "Hiroshima, Japan / Nihon",
+    place: "Hiroshima, Japoni",
     coords: [34.3853, 132.4553],
     period: "fundi",
     type: "sulm",
@@ -369,7 +424,7 @@ const events = [
     isoDate: "1945-08-09",
     year: 1945,
     month: "Gusht",
-    place: "Nagasaki, Japan / Nihon",
+    place: "Nagasaki, Japoni",
     coords: [32.7503, 129.8777],
     period: "fundi",
     type: "sulm",
@@ -383,7 +438,7 @@ const events = [
     isoDate: "1945-09-02",
     year: 1945,
     month: "Shtator",
-    place: "Tokyo Bay / Tokyo-wan, Japan / Nihon",
+    place: "Gjiri i Tokios, Japoni",
     coords: [35.45, 139.76],
     period: "fundi",
     type: "kthese",
@@ -427,16 +482,10 @@ function getTypeLabel(type) {
   return labels[type];
 }
 
-function createMarkerIcon(type, isActive = false) {
-  const activeClass = isActive ? "active" : "";
-
-  return L.divIcon({
-    className: "",
-    html: `<div class="event-marker ${type} ${activeClass}"></div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
-    popupAnchor: [0, -10]
-  });
+function createMarkerElement(type, isActive = false) {
+  const markerEl = document.createElement("div");
+  markerEl.className = `event-marker ${type}${isActive ? " active" : ""}`;
+  return markerEl;
 }
 
 function popupTemplate(event) {
@@ -452,18 +501,31 @@ function popupTemplate(event) {
 
 function createMarkers() {
   events.forEach((event) => {
-    const marker = L.marker(event.coords, {
-      icon: createMarkerIcon(event.type)
-    });
+    const markerEl = createMarkerElement(event.type, state.selectedId === event.id);
+    const popup = new maplibregl.Popup({
+      offset: 25,
+      closeButton: false,
+      closeOnClick: true
+    }).setHTML(popupTemplate(event));
 
-    marker.bindPopup(popupTemplate(event));
-    marker.eventData = event;
-    marker.on("click", () => {
+    const marker = new maplibregl.Marker(markerEl)
+      .setLngLat([event.coords[1], event.coords[0]])
+      .setPopup(popup)
+      .addTo(map);
+
+    markerEl.addEventListener("click", () => {
       state.selectedId = event.id;
       updateUI(false);
+      popup.addTo(map);
     });
 
-    markers.set(event.id, marker);
+    markers.set(event.id, {
+      marker,
+      popup,
+      element: markerEl,
+      eventData: event,
+      visible: true
+    });
   });
 }
 
@@ -569,18 +631,22 @@ function updateMarkers(filteredEvents) {
   const visibleIds = new Set(filteredEvents.map((event) => event.id));
   const visibleMarkers = [];
 
-  markers.forEach((marker, id) => {
-    const event = marker.eventData;
+  markers.forEach((markerObj, id) => {
+    const event = markerObj.eventData;
     const isVisible = visibleIds.has(id);
     const isActive = state.selectedId === id;
 
-    marker.setIcon(createMarkerIcon(event.type, isActive));
+    markerObj.element.classList.toggle("active", isActive);
 
     if (isVisible) {
-      marker.addTo(map);
-      visibleMarkers.push(marker);
-    } else {
-      map.removeLayer(marker);
+      if (!markerObj.visible) {
+        markerObj.marker.addTo(map);
+        markerObj.visible = true;
+      }
+      visibleMarkers.push(markerObj);
+    } else if (markerObj.visible) {
+      markerObj.marker.remove();
+      markerObj.visible = false;
     }
   });
 
@@ -589,12 +655,23 @@ function updateMarkers(filteredEvents) {
 
 function fitMapToMarkers(visibleMarkers) {
   if (visibleMarkers.length === 0) {
-    map.setView([28, 15], 2);
+    map.setCenter([15, 28]);
+    map.setZoom(2);
     return;
   }
 
-  const group = L.featureGroup(visibleMarkers);
-  map.fitBounds(group.getBounds().pad(0.28));
+  if (visibleMarkers.length === 1) {
+    const lngLat = visibleMarkers[0].marker.getLngLat();
+    map.flyTo({ center: [lngLat.lng, lngLat.lat], zoom: 4, speed: 1.1 });
+    return;
+  }
+
+  const bounds = new maplibregl.LngLatBounds();
+  visibleMarkers.forEach((markerObj) => {
+    bounds.extend(markerObj.marker.getLngLat());
+  });
+
+  map.fitBounds(bounds, { padding: 60, maxZoom: 4, duration: 800 });
 }
 
 function ensureSelectedEvent(filteredEvents) {
@@ -622,8 +699,11 @@ function updateUI(shouldFitMap = true) {
   }
 
   if (activeEvent) {
-    const marker = markers.get(activeEvent.id);
-    marker.setPopupContent(popupTemplate(activeEvent));
+    const markerObj = markers.get(activeEvent.id);
+    if (markerObj) {
+      markerObj.popup.setHTML(popupTemplate(activeEvent));
+      markerObj.popup.addTo(map);
+    }
   }
 }
 
@@ -637,11 +717,12 @@ function focusEvent(eventId) {
   state.selectedId = eventId;
   updateUI(false);
 
-  const marker = markers.get(eventId);
-  map.flyTo(event.coords, Math.max(map.getZoom(), 4), {
-    duration: 1.1
-  });
-  marker.openPopup();
+  const markerObj = markers.get(eventId);
+  if (markerObj) {
+    const coords = [event.coords[1], event.coords[0]];
+    map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 4), speed: 1.1 });
+    markerObj.popup.addTo(map);
+  }
 }
 
 function toggleStoryMode() {
@@ -685,6 +766,7 @@ function resetFilters() {
   state.year = "all";
   state.search = "";
   searchInput.value = "";
+  document.querySelectorAll(".legend-item").forEach((item) => item.classList.remove("active"));
   updateUI(true);
 }
 
@@ -719,30 +801,77 @@ function bindControls() {
 
     resetFilters();
   });
+
+  // Legend item click handlers
+  let legendPopup = null;
+  
+  document.querySelectorAll(".legend-item").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const type = item.dataset.type;
+      
+      // Get all events of this type
+      const typeEvents = events.filter((event) => event.type === type);
+      const typeLabel = getTypeLabel(type);
+      const typeCount = typeEvents.length;
+      
+      // Create popup content
+      const popupHTML = `
+        <div class="popup-card">
+          <h3>${typeLabel}</h3>
+          <p class="popup-meta">${typeCount} ngjarje</p>
+          <hr style="margin: 8px 0; opacity: 0.3;">
+          <p class="popup-desc" style="font-size: 0.85rem; margin: 8px 0 0;">Kliko në hartë për të parë ngjarjet e këtij lloji</p>
+        </div>
+      `;
+      
+      // Close existing popup if any
+      if (legendPopup) {
+        legendPopup.remove();
+      }
+      
+      // Create new popup at legend location
+      legendPopup = new maplibregl.Popup({
+        offset: [0, 20],
+        closeButton: true,
+        closeOnClick: true
+      })
+        .setHTML(popupHTML)
+        .setLngLat([19.8171, 41.3275])
+        .addTo(map);
+      
+      // Toggle filter
+      if (state.type === type) {
+        state.type = "all";
+        item.classList.remove("active");
+      } else {
+        document.querySelectorAll(".legend-item").forEach((li) => li.classList.remove("active"));
+        state.type = type;
+        item.classList.add("active");
+      }
+      
+      updateUI(true);
+    });
+  });
 }
 
-createMarkers();
 renderYearButtons();
 bindControls();
 
 state.selectedId = events[0].id;
-updateUI(true);
-
-map.whenReady(() => {
-  window.requestAnimationFrame(() => {
-    map.invalidateSize();
-  });
-});
 
 window.addEventListener("load", () => {
-  window.setTimeout(() => {
-    map.invalidateSize();
-  }, 150);
+  if (map) {
+    window.setTimeout(() => {
+      map.resize();
+    }, 150);
+  }
 });
 
-// Kur layout-i ndryshon, Leaflet ka nevojë të rifreskojë madhësinë e hartës.
 window.addEventListener("resize", () => {
-  window.requestAnimationFrame(() => {
-    map.invalidateSize();
-  });
+  if (map) {
+    window.requestAnimationFrame(() => {
+      map.resize();
+    });
+  }
 });
