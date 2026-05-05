@@ -518,7 +518,7 @@ function createMarkers() {
       
       // Close all other popups
       markers.forEach((markerObj) => {
-        if (markerObj.popup && markerObj.popup.isOpen()) {
+        if (markerObj && markerObj.popup && markerObj.popup.isOpen()) {
           markerObj.popup.remove();
         }
       });
@@ -527,8 +527,12 @@ function createMarkers() {
       updateUI(false);
       
       // Show the popup
-      popup.setHTML(popupTemplate(event));
-      popup.addTo(map);
+      if (popup) {
+        popup.setHTML(popupTemplate(event));
+        if (!popup.isOpen()) {
+          popup.addTo(map);
+        }
+      }
       
       // Show story controls when a marker is clicked
       if (!state.storyPlaying) {
