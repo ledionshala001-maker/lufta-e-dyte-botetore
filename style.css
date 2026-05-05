@@ -566,6 +566,8 @@ h2 {
 .story-control-btn.continue:hover {
   box-shadow: 0 10px 24px rgba(107, 142, 52, 0.3);
 }
+
+.selected-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
