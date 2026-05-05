@@ -724,9 +724,10 @@ function updateUI(shouldFitMap = true, isStoryMode = false) {
     fitMapToMarkers(visibleMarkers);
   }
 
-  if (activeEvent) {
+  // Only show popup during story mode (focusEvent handles popup display for clicks)
+  if (activeEvent && isStoryMode) {
     const markerObj = markers.get(activeEvent.id);
-    if (markerObj && !state.storyPlaying) {
+    if (markerObj) {
       markerObj.popup.setHTML(popupTemplate(activeEvent));
       if (!markerObj.popup.isOpen()) {
         markerObj.popup.addTo(map);
