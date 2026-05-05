@@ -1028,3 +1028,43 @@ h2 {
     font-size: 0.88rem;
   }
 }
+
+/* MapLibre GL Popup Styling */
+.maplibregl-popup {
+  max-width: 320px;
+}
+
+.popup-card {
+  background: var(--paper-strong);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.popup-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  color: var(--ink);
+  font-family: "Cinzel", serif;
+}
+
+.popup-date {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.popup-place {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.popup-text {
+  margin: 8px 0 0 0;
+  font-size: 0.85rem;
+  color: var(--ink);
+  line-height: 1.4;
+}
