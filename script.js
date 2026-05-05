@@ -514,6 +514,13 @@ function createMarkers() {
       .addTo(map);
 
     markerEl.addEventListener("click", () => {
+      // Close all other popups
+      markers.forEach((markerObj) => {
+        if (markerObj.popup.isOpen()) {
+          markerObj.popup.remove();
+        }
+      });
+      
       state.selectedId = event.id;
       updateUI(false);
       popup.addTo(map);
@@ -629,6 +636,13 @@ function renderEventList(filteredEvents) {
 
   document.querySelectorAll(".event-card").forEach((card) => {
     card.addEventListener("click", () => {
+      // Close all popups
+      markers.forEach((markerObj) => {
+        if (markerObj.popup.isOpen()) {
+          markerObj.popup.remove();
+        }
+      });
+      
       focusEvent(card.dataset.eventId);
       
       // Show story controls when an event card is clicked
@@ -712,9 +726,11 @@ function updateUI(shouldFitMap = true, isStoryMode = false) {
 
   if (activeEvent) {
     const markerObj = markers.get(activeEvent.id);
-    if (markerObj) {
+    if (markerObj && !state.storyPlaying) {
       markerObj.popup.setHTML(popupTemplate(activeEvent));
-      markerObj.popup.addTo(map);
+      if (!markerObj.popup.isOpen()) {
+        markerObj.popup.addTo(map);
+      }
     }
   }
 }
@@ -731,9 +747,20 @@ function focusEvent(eventId, isStoryMode = false) {
 
   const markerObj = markers.get(eventId);
   if (markerObj) {
+    // Close all other popups first
+    markers.forEach((m) => {
+      if (m.popup.isOpen()) {
+        m.popup.remove();
+      }
+    });
+    
     const coords = [event.coords[1], event.coords[0]];
     map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 4), speed: 1.1 });
-    markerObj.popup.addTo(map);
+    
+    // Add the popup with a small delay to ensure smooth transition
+    setTimeout(() => {
+      markerObj.popup.addTo(map);
+    }, 200);
   }
 }
 
