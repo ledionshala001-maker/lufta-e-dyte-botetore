@@ -724,7 +724,7 @@ function updateUI(shouldFitMap = true, isStoryMode = false) {
     fitMapToMarkers(visibleMarkers);
   }
 
-  // Only show popup during story mode (focusEvent handles popup display for clicks)
+  // Only show popup during story mode or when actively selected (via click)
   if (activeEvent && isStoryMode) {
     const markerObj = markers.get(activeEvent.id);
     if (markerObj) {
@@ -760,6 +760,7 @@ function focusEvent(eventId, isStoryMode = false) {
     
     // Add the popup with a small delay to ensure smooth transition
     setTimeout(() => {
+      markerObj.popup.setHTML(popupTemplate(event));
       markerObj.popup.addTo(map);
     }, 200);
   }
