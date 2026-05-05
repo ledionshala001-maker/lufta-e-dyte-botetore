@@ -513,16 +513,21 @@ function createMarkers() {
       .setPopup(popup)
       .addTo(map);
 
-    markerEl.addEventListener("click", () => {
+    markerEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      
       // Close all other popups
       markers.forEach((markerObj) => {
-        if (markerObj.popup.isOpen()) {
+        if (markerObj.popup && markerObj.popup.isOpen()) {
           markerObj.popup.remove();
         }
       });
       
       state.selectedId = event.id;
       updateUI(false);
+      
+      // Show the popup
+      popup.setHTML(popupTemplate(event));
       popup.addTo(map);
       
       // Show story controls when a marker is clicked
@@ -750,7 +755,7 @@ function focusEvent(eventId, isStoryMode = false) {
   if (markerObj) {
     // Close all other popups first
     markers.forEach((m) => {
-      if (m.popup.isOpen()) {
+      if (m && m.popup && m.popup.isOpen()) {
         m.popup.remove();
       }
     });
@@ -760,8 +765,10 @@ function focusEvent(eventId, isStoryMode = false) {
     
     // Add the popup with a small delay to ensure smooth transition
     setTimeout(() => {
-      markerObj.popup.setHTML(popupTemplate(event));
-      markerObj.popup.addTo(map);
+      if (markerObj.popup) {
+        markerObj.popup.setHTML(popupTemplate(event));
+        markerObj.popup.addTo(map);
+      }
     }, 200);
   }
 }
