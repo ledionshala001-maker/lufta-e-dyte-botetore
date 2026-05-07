@@ -4,6 +4,106 @@ const MAPTILER_KEY = "yZn3JKo7lNscLEszvALo";
 // Using Streets-v4 style with proper English/local language support
 const mapStyleUrl = `https://api.maptiler.com/maps/streets-v4/style.json?key=${MAPTILER_KEY}`;
 
+// English Wikipedia article slugs for each event id. Used to fetch a
+// thumbnail photo via the public summary API (no key, CORS-enabled).
+const wikiSlugs = {
+  "albania-italian-1939": "Italian_invasion_of_Albania",
+  "albania-peze-1942": "Conference_of_Pezë",
+  "albania-german-1943": "German_occupation_of_Albania",
+  "albania-liberation-1944": "Liberation_of_Tirana",
+  "poland-1939": "Invasion_of_Poland",
+  "soviet-poland-1939": "Soviet_invasion_of_Poland",
+  "winter-war-1939": "Winter_War",
+  "norway-1940": "Norwegian_campaign",
+  "france-1940": "Battle_of_France",
+  "britain-1940": "Battle_of_Britain",
+  "balkan-1941": "Invasion_of_Yugoslavia",
+  "barbarossa-1941": "Operation_Barbarossa",
+  "pearl-harbor-1941": "Attack_on_Pearl_Harbor",
+  "midway-1942": "Battle_of_Midway",
+  "el-alamein-1942": "Second_Battle_of_El_Alamein",
+  "stalingrad-1942": "Battle_of_Stalingrad",
+  "torch-1942": "Operation_Torch",
+  "warsaw-ghetto-1943": "Warsaw_Ghetto_Uprising",
+  "sicily-1943": "Allied_invasion_of_Sicily",
+  "italy-surrenders-1943": "Armistice_of_Cassibile",
+  "leningrad-1944": "Siege_of_Leningrad",
+  "dday-1944": "Normandy_landings",
+  "paris-1944": "Liberation_of_Paris",
+  "leyte-1944": "Battle_of_Leyte_Gulf",
+  "bulge-1944": "Battle_of_the_Bulge",
+  "iwo-jima-1945": "Battle_of_Iwo_Jima",
+  "berlin-1945": "Battle_of_Berlin",
+  "ve-day-1945": "Victory_in_Europe_Day",
+  "hiroshima-1945": "Atomic_bombings_of_Hiroshima_and_Nagasaki",
+  "nagasaki-1945": "Atomic_bombings_of_Hiroshima_and_Nagasaki",
+  "japan-surrenders-1945": "Surrender_of_Japan"
+};
+
+// A short, weighty fact or casualty estimate per event. Shown as a
+// highlighted pill in the selected card and presenter panel. Only events
+// where the scale is the story get one — the rest stay clean.
+const scaleFigures = {
+  "albania-italian-1939": "Mbreti Zog ikën brenda 5 ditësh",
+  "poland-1939": "≈200,000 viktima brenda 5 javësh",
+  "winter-war-1939": "≈70,000 viktima sovjetike",
+  "france-1940": "Francë e dorëzuar për 6 javë",
+  "britain-1940": "≈1,500 pilotë britanikë të vrarë",
+  "barbarossa-1941": "Front mbi 2,900 km i gjatë",
+  "pearl-harbor-1941": "2,403 amerikanë të vrarë",
+  "midway-1942": "4 portaaeroplanë japonezë të zhytur",
+  "stalingrad-1942": "≈2 milionë viktima totale",
+  "warsaw-ghetto-1943": "≈13,000 të vrarë në kryengritje",
+  "leningrad-1944": "Rrethimi 872 ditë, ≈800,000 të vdekur",
+  "dday-1944": "≈156,000 ushtarë aleatë në ditën e parë",
+  "albania-liberation-1944": "Çlirim pa ndihmë të huaj ushtarake",
+  "bulge-1944": "≈100,000 viktima nga të dyja palët",
+  "iwo-jima-1945": "≈26,000 viktima amerikane",
+  "berlin-1945": "≈80,000 ushtarë sovjetikë të vrarë",
+  "hiroshima-1945": "≈140,000 të vdekur deri në fund të 1945",
+  "nagasaki-1945": "≈74,000 të vdekur deri në fund të 1945"
+};
+
+const WIKI_SUMMARY_API = "https://en.wikipedia.org/api/rest_v1/page/summary/";
+const wikiThumbCache = new Map();
+
+function getWikiThumb(slug) {
+  if (!slug) return Promise.resolve(null);
+  if (wikiThumbCache.has(slug)) return wikiThumbCache.get(slug);
+  const p = fetch(WIKI_SUMMARY_API + encodeURIComponent(slug))
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => data?.thumbnail?.source || data?.originalimage?.source || null)
+    .catch(() => null);
+  wikiThumbCache.set(slug, p);
+  return p;
+}
+
+function hydrateEventPhoto(eventId) {
+  const event = events.find((e) => e.id === eventId);
+  const wraps = document.querySelectorAll(`[data-photo-for="${eventId}"]`);
+  if (!wraps.length) return;
+
+  const slug = wikiSlugs[eventId];
+  if (!slug) {
+    wraps.forEach((w) => w.remove());
+    return;
+  }
+
+  getWikiThumb(slug).then((url) => {
+    // Re-query in case the DOM changed while awaiting the network.
+    document.querySelectorAll(`[data-photo-for="${eventId}"]`).forEach((w) => {
+      if (!url) {
+        w.remove();
+        return;
+      }
+      if (w.dataset.loaded === "true") return;
+      w.innerHTML = `<img src="${url}" alt="${event?.title ?? ""}" loading="lazy" />`;
+      w.dataset.loaded = "true";
+      w.classList.add("loaded");
+    });
+  });
+}
+
 let map;
 
 function localizeStyleField(field) {
@@ -67,6 +167,20 @@ initMap();
 
 // Të dhënat janë renditur sipas kohës që lista dhe "story mode" të ecin natyrshëm.
 const events = [
+  {
+    id: "albania-italian-1939",
+    title: "Italia pushton Shqipërinë",
+    dateLabel: "7 prill 1939",
+    isoDate: "1939-04-07",
+    year: 1939,
+    month: "Prill",
+    place: "Durrës, Shqipëri",
+    coords: [41.3231, 19.4548],
+    period: "fillimi",
+    type: "sulm",
+    front: "Ballkan",
+    description: "Forcat italiane zbarkuan në Durrës dhe pushtuan Shqipërinë brenda pak ditësh. Mbreti Zog u largua në mërgim dhe vendi u përfshi në bllokun fashist."
+  },
   {
     id: "poland-1939",
     title: "Pushtimi i Polonisë",
@@ -236,6 +350,20 @@ const events = [
     description: "Një nga betejat më të ashpra të luftës. Fitorja sovjetike këtu e ktheu seriozisht rrjedhën e luftës në lindje."
   },
   {
+    id: "albania-peze-1942",
+    title: "Konferenca e Pezës",
+    dateLabel: "16 shtator 1942",
+    isoDate: "1942-09-16",
+    year: 1942,
+    month: "Shtator",
+    place: "Pezë, Shqipëri",
+    coords: [41.196, 19.728],
+    period: "mesi",
+    type: "kthese",
+    front: "Ballkan",
+    description: "Në fshatin Pezë u themelua Lëvizja Antifashiste Nacional-Çlirimtare, e cila bashkoi forcat e rezistencës shqiptare kundër pushtuesve."
+  },
+  {
     id: "torch-1942",
     title: "Operacioni Torch",
     dateLabel: "8 nëntor 1942",
@@ -292,6 +420,20 @@ const events = [
     description: "Dorëzimi i Italisë ishte një goditje politike dhe ushtarake për Boshtin. Lufta, megjithatë, vazhdoi në territorin italian."
   },
   {
+    id: "albania-german-1943",
+    title: "Pushtimi gjerman i Shqipërisë",
+    dateLabel: "10 shtator 1943",
+    isoDate: "1943-09-10",
+    year: 1943,
+    month: "Shtator",
+    place: "Tiranë, Shqipëri",
+    coords: [41.3275, 19.8189],
+    period: "mesi",
+    type: "sulm",
+    front: "Ballkan",
+    description: "Pas dorëzimit të Italisë, Gjermania naziste mori kontrollin e Shqipërisë. Rezistenca shqiptare u forcua dhe luftimet u intensifikuan në mbarë vendin."
+  },
+  {
     id: "leningrad-1944",
     title: "Mbaron rrethimi i Leningradit",
     dateLabel: "27 janar 1944",
@@ -346,6 +488,20 @@ const events = [
     type: "kthese",
     front: "Paqësor",
     description: "Një nga betejat më të mëdha detare të historisë. Kjo e dobësoi rëndë flotën japoneze."
+  },
+  {
+    id: "albania-liberation-1944",
+    title: "Çlirimi i Tiranës",
+    dateLabel: "17 nëntor 1944",
+    isoDate: "1944-11-17",
+    year: 1944,
+    month: "Nëntor",
+    place: "Tiranë, Shqipëri",
+    coords: [41.3275, 19.8189],
+    period: "fundi",
+    type: "kthese",
+    front: "Ballkan",
+    description: "Partizanët shqiptarë çliruan Tiranën pa ndihmë të huaj ushtarake. Brenda dy javësh i gjithë vendi u çlirua nga okupatorët gjermanë."
   },
   {
     id: "bulge-1944",
@@ -455,7 +611,16 @@ const state = {
   selectedId: null,
   storyPlaying: false,
   storyTimer: null,
-  storyIndex: 0
+  storyIndex: 0,
+  storyInterval: 12000
+};
+
+const MOBILE_BREAKPOINT = 1100;
+const isMobileLayout = () => window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`).matches;
+const scrollIntoViewIfMobile = (selector) => {
+  if (!isMobileLayout()) return;
+  const el = document.querySelector(selector);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 const markers = new Map();
@@ -491,6 +656,7 @@ function createMarkerElement(type, isActive = false) {
 function popupTemplate(event) {
   return `
     <div class="popup-card">
+      <div class="event-photo popup-photo" data-photo-for="${event.id}"></div>
       <h3>${event.title}</h3>
       <p class="popup-date">${event.dateLabel}</p>
       <p class="popup-place">${event.place}</p>
@@ -526,14 +692,15 @@ function createMarkers() {
       state.selectedId = event.id;
       updateUI(false);
       
-      // Show the popup
-      if (popup) {
+      // Show the popup (skip in presenter mode — the panel already shows the info).
+      if (popup && !inPresenterMode()) {
         popup.setHTML(popupTemplate(event));
         if (!popup.isOpen()) {
           popup.addTo(map);
         }
+        hydrateEventPhoto(event.id);
       }
-      
+
       // Show story controls when a marker is clicked
       if (!state.storyPlaying) {
         showStoryControls();
@@ -604,8 +771,10 @@ function renderSelectedEvent(event, isStoryMode = false) {
     return;
   }
 
+  const scale = scaleFigures[event.id];
   selectedEvent.classList.toggle("story-active", isStoryMode);
   selectedEvent.innerHTML = `
+    <div class="event-photo selected-photo" data-photo-for="${event.id}"></div>
     <h3>${event.title}</h3>
     <div class="selected-meta">
       <span class="meta-pill">${event.dateLabel}</span>
@@ -613,8 +782,31 @@ function renderSelectedEvent(event, isStoryMode = false) {
       <span class="meta-pill">${getTypeLabel(event.type)}</span>
       <span class="meta-pill">${event.front}</span>
     </div>
+    ${scale ? `<p class="scale-figure">${scale}</p>` : ""}
     <p class="selected-text">${event.description}</p>
   `;
+  hydrateEventPhoto(event.id);
+  renderPresenterPanel(event);
+}
+
+function renderPresenterPanel(event) {
+  const content = document.querySelector("#presenterPanel .presenter-content");
+  if (!content) return;
+  if (!event) {
+    content.innerHTML = `<div class="presenter-text"><p class="presenter-eyebrow">—</p><h3 class="presenter-title">Asnjë ngjarje e zgjedhur</h3></div>`;
+    return;
+  }
+  const scale = scaleFigures[event.id];
+  content.innerHTML = `
+    <div class="event-photo presenter-photo" data-photo-for="${event.id}"></div>
+    <div class="presenter-text">
+      <p class="presenter-eyebrow">${event.dateLabel} · ${event.place}</p>
+      <h3 class="presenter-title">${event.title}</h3>
+      ${scale ? `<p class="presenter-scale">${scale}</p>` : ""}
+      <p class="presenter-desc">${event.description}</p>
+    </div>
+  `;
+  hydrateEventPhoto(event.id);
 }
 
 function renderEventList(filteredEvents) {
@@ -651,13 +843,17 @@ function renderEventList(filteredEvents) {
           markerObj.popup.remove();
         }
       });
-      
+
       focusEvent(card.dataset.eventId);
-      
+
       // Show story controls when an event card is clicked
       if (!state.storyPlaying) {
         showStoryControls();
       }
+
+      // On mobile the map sits above the sidebar — bring it into view
+      // so the user sees the marker animate to its location.
+      scrollIntoViewIfMobile(".map-shell-card");
     });
   });
 }
@@ -695,9 +891,16 @@ function fitMapToMarkers(visibleMarkers) {
     return;
   }
 
+  const padBottom = getMapBottomPadding();
+
   if (visibleMarkers.length === 1) {
     const lngLat = visibleMarkers[0].marker.getLngLat();
-    map.flyTo({ center: [lngLat.lng, lngLat.lat], zoom: 4, speed: 1.1 });
+    map.flyTo({
+      center: [lngLat.lng, lngLat.lat],
+      zoom: 4,
+      speed: 1.1,
+      padding: { top: 0, right: 0, bottom: padBottom, left: 0 }
+    });
     return;
   }
 
@@ -706,7 +909,11 @@ function fitMapToMarkers(visibleMarkers) {
     bounds.extend(markerObj.marker.getLngLat());
   });
 
-  map.fitBounds(bounds, { padding: 60, maxZoom: 4, duration: 800 });
+  map.fitBounds(bounds, {
+    padding: { top: 60, right: 60, bottom: Math.max(60, padBottom), left: 60 },
+    maxZoom: 4,
+    duration: 800
+  });
 }
 
 function ensureSelectedEvent(filteredEvents) {
@@ -733,14 +940,16 @@ function updateUI(shouldFitMap = true, isStoryMode = false) {
     fitMapToMarkers(visibleMarkers);
   }
 
-  // Only show popup during story mode or when actively selected (via click)
-  if (activeEvent && isStoryMode) {
+  // Only show popup during story mode or when actively selected (via click).
+  // Skip in presenter mode — the panel already shows the info.
+  if (activeEvent && isStoryMode && !inPresenterMode()) {
     const markerObj = markers.get(activeEvent.id);
     if (markerObj) {
       markerObj.popup.setHTML(popupTemplate(activeEvent));
       if (!markerObj.popup.isOpen()) {
         markerObj.popup.addTo(map);
       }
+      hydrateEventPhoto(activeEvent.id);
     }
   }
 }
@@ -765,13 +974,22 @@ function focusEvent(eventId, isStoryMode = false) {
     });
     
     const coords = [event.coords[1], event.coords[0]];
-    map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 4), speed: 1.1 });
+    const padBottom = getMapBottomPadding();
+    map.flyTo({
+      center: coords,
+      zoom: Math.max(map.getZoom(), 4),
+      speed: 1.1,
+      padding: { top: 0, right: 0, bottom: padBottom, left: 0 }
+    });
     
-    // Add the popup with a small delay to ensure smooth transition
+    // Add the popup with a small delay to ensure smooth transition.
+    // Skip in presenter mode — the panel already shows the info and a popup
+    // would overlap it at the bottom of the map.
     setTimeout(() => {
-      if (markerObj.popup) {
+      if (markerObj.popup && !inPresenterMode()) {
         markerObj.popup.setHTML(popupTemplate(event));
         markerObj.popup.addTo(map);
+        hydrateEventPhoto(event.id);
       }
     }, 200);
   }
@@ -787,6 +1005,129 @@ function hideStoryControls() {
   storyControls.style.display = "none";
 }
 
+function updateStoryProgress() {
+  const filtered = getFilteredEvents();
+  const progressFill = document.getElementById("progressFill");
+  const progressText = document.getElementById("progressText");
+  if (!progressFill || !progressText || filtered.length === 0) return;
+  const percentage = ((state.storyIndex + 1) / filtered.length) * 100;
+  progressFill.style.width = percentage + "%";
+  progressText.textContent = `Ngjarja ${state.storyIndex + 1} nga ${filtered.length}`;
+}
+
+function startStoryTimer() {
+  window.clearInterval(state.storyTimer);
+  state.storyTimer = window.setInterval(() => {
+    const currentFiltered = getFilteredEvents();
+    if (currentFiltered.length === 0) {
+      toggleStoryMode();
+      return;
+    }
+    state.storyIndex = (state.storyIndex + 1) % currentFiltered.length;
+    focusEvent(currentFiltered[state.storyIndex].id, true);
+    updateStoryProgress();
+  }, state.storyInterval);
+}
+
+function goToOffset(offset) {
+  const filtered = getFilteredEvents();
+  if (filtered.length === 0) return;
+  const i = filtered.findIndex((e) => e.id === state.selectedId);
+  const base = i >= 0 ? i : 0;
+  const next = (base + offset + filtered.length) % filtered.length;
+  state.storyIndex = next;
+  focusEvent(filtered[next].id, state.storyPlaying);
+  updateStoryProgress();
+  // Manual navigation should give the new event a full interval before the
+  // next auto-advance — otherwise it can flip again almost immediately.
+  if (state.storyPlaying) startStoryTimer();
+}
+
+function inPresenterMode() {
+  return document.body.classList.contains("presenter");
+}
+
+function closeAllPopups() {
+  markers.forEach((m) => {
+    if (m?.popup?.isOpen()) m.popup.remove();
+  });
+}
+
+// Bottom padding that should be reserved on the map so markers don't sit
+// underneath the presenter panel. Returns 0 when not in presenter mode.
+function getMapBottomPadding() {
+  if (!inPresenterMode()) return 0;
+  const panel = document.getElementById("presenterPanel");
+  return panel ? panel.getBoundingClientRect().height + 24 : 0;
+}
+
+function setMapPaddingForPresenter(active) {
+  if (!map) return;
+  const padBottom = active ? getMapBottomPadding() : 0;
+  map.setPadding({ top: 0, right: 0, bottom: padBottom, left: 0 });
+}
+
+function togglePresenterMode(force) {
+  const next = typeof force === "boolean" ? force : !document.body.classList.contains("presenter");
+  document.body.classList.toggle("presenter", next);
+  document.getElementById("presenterPanel")?.setAttribute("aria-hidden", next ? "false" : "true");
+  document.getElementById("presenterBtn")?.setAttribute("aria-pressed", next ? "true" : "false");
+  // The presenter panel already shows the photo + description — popups would
+  // duplicate that info and overlap the panel at the bottom of the map.
+  if (next) closeAllPopups();
+  // Re-render so the panel picks up the current event.
+  const active = events.find((e) => e.id === state.selectedId);
+  if (active) renderPresenterPanel(active);
+  // Map needs a resize and padding update whenever the panel toggles.
+  setTimeout(() => {
+    map?.resize();
+    setMapPaddingForPresenter(next);
+    // Re-centre the active event so it sits above the panel, not under it.
+    if (next && active) {
+      const padBottom = getMapBottomPadding();
+      map?.flyTo({
+        center: [active.coords[1], active.coords[0]],
+        speed: 1.1,
+        padding: { top: 0, right: 0, bottom: padBottom, left: 0 }
+      });
+    }
+  }, 350);
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  } else {
+    document.exitFullscreen?.();
+  }
+}
+
+function toggleShortcutsHelp(force) {
+  const next = typeof force === "boolean" ? force : !document.body.classList.contains("shortcuts-open");
+  document.body.classList.toggle("shortcuts-open", next);
+  document.getElementById("shortcutsOverlay")?.setAttribute("aria-hidden", next ? "false" : "true");
+}
+
+let splashDismissed = false;
+function dismissSplash() {
+  if (splashDismissed) return;
+  splashDismissed = true;
+  document.body.classList.add("splash-dismissed");
+  // Resize the map after the overlay fade so tiles paint at the right size.
+  setTimeout(() => map?.resize(), 700);
+}
+
+function isSplashVisible() {
+  return !splashDismissed;
+}
+
+function updatePresenterPlayButton() {
+  const btn = document.getElementById("presenterPlay");
+  if (!btn) return;
+  btn.textContent = state.storyPlaying ? "❚❚" : "▶";
+  btn.setAttribute("aria-label", state.storyPlaying ? "Ndalo" : "Luaj");
+}
+
 function toggleStoryMode() {
   const filteredEvents = getFilteredEvents();
 
@@ -795,22 +1136,23 @@ function toggleStoryMode() {
   }
 
   const storyProgress = document.getElementById("storyProgress");
-  const progressFill = document.getElementById("progressFill");
-  const progressText = document.getElementById("progressText");
 
   if (state.storyPlaying) {
     window.clearInterval(state.storyTimer);
     state.storyPlaying = false;
-    storyBtn.textContent = "Luaj Kronologjinë";
+    storyBtn.textContent = "Luaj kronologjinë";
     storyBtn.classList.remove("playing");
+    document.body.classList.remove("playing");
     storyProgress.style.display = "none";
     showStoryControls();
+    updatePresenterPlayButton();
     return;
   }
 
   state.storyPlaying = true;
   storyBtn.textContent = "Ndalo";
   storyBtn.classList.add("playing");
+  document.body.classList.add("playing");
   storyProgress.style.display = "block";
   hideStoryControls();
 
@@ -818,27 +1160,9 @@ function toggleStoryMode() {
   state.storyIndex = currentIndex >= 0 ? currentIndex : 0;
 
   focusEvent(filteredEvents[state.storyIndex].id, true);
-
-  // Update progress display
-  const updateProgress = () => {
-    const percentage = ((state.storyIndex + 1) / filteredEvents.length) * 100;
-    progressFill.style.width = percentage + "%";
-    progressText.textContent = `Ngjarja ${state.storyIndex + 1} nga ${filteredEvents.length}`;
-  };
-  updateProgress();
-
-  state.storyTimer = window.setInterval(() => {
-    const currentFiltered = getFilteredEvents();
-
-    if (currentFiltered.length === 0) {
-      toggleStoryMode();
-      return;
-    }
-
-    state.storyIndex = (state.storyIndex + 1) % currentFiltered.length;
-    focusEvent(currentFiltered[state.storyIndex].id, true);
-    updateProgress();
-  }, 5500);
+  updateStoryProgress();
+  startStoryTimer();
+  updatePresenterPlayButton();
 }
 
 function resetFilters() {
@@ -869,7 +1193,28 @@ function bindControls() {
     updateUI(true);
   });
 
-  storyBtn.addEventListener("click", toggleStoryMode);
+  storyBtn.addEventListener("click", () => {
+    toggleStoryMode();
+    if (state.storyPlaying) scrollIntoViewIfMobile(".map-shell-card");
+  });
+
+  const paceFilters = document.getElementById("paceFilters");
+  if (paceFilters) {
+    paceFilters.addEventListener("click", (event) => {
+      const btn = event.target.closest(".pace-btn");
+      if (!btn) return;
+
+      const next = Number(btn.dataset.pace);
+      if (!Number.isFinite(next) || next <= 0) return;
+
+      state.storyInterval = next;
+      paceFilters.querySelectorAll(".pace-btn").forEach((b) => {
+        b.classList.toggle("active", b === btn);
+      });
+
+      if (state.storyPlaying) startStoryTimer();
+    });
+  }
 
   // Story control buttons
   const playFromStartBtn = document.getElementById("playFromStartBtn");
@@ -911,45 +1256,11 @@ function bindControls() {
     resetFilters();
   });
 
-  // Legend item click handlers
-  let legendPopup = null;
-  
   document.querySelectorAll(".legend-item").forEach((item) => {
     item.addEventListener("click", (e) => {
       e.stopPropagation();
       const type = item.dataset.type;
-      
-      // Get all events of this type
-      const typeEvents = events.filter((event) => event.type === type);
-      const typeLabel = getTypeLabel(type);
-      const typeCount = typeEvents.length;
-      
-      // Create popup content
-      const popupHTML = `
-        <div class="popup-card">
-          <h3>${typeLabel}</h3>
-          <p class="popup-meta">${typeCount} ngjarje</p>
-          <hr style="margin: 8px 0; opacity: 0.3;">
-          <p class="popup-desc" style="font-size: 0.85rem; margin: 8px 0 0;">Kliko në hartë për të parë ngjarjet e këtij lloji</p>
-        </div>
-      `;
-      
-      // Close existing popup if any
-      if (legendPopup) {
-        legendPopup.remove();
-      }
-      
-      // Create new popup at legend location
-      legendPopup = new maplibregl.Popup({
-        offset: [0, 20],
-        closeButton: true,
-        closeOnClick: true
-      })
-        .setHTML(popupHTML)
-        .setLngLat([19.8171, 41.3275])
-        .addTo(map);
-      
-      // Toggle filter
+
       if (state.type === type) {
         state.type = "all";
         item.classList.remove("active");
@@ -958,9 +1269,81 @@ function bindControls() {
         state.type = type;
         item.classList.add("active");
       }
-      
+
       updateUI(true);
     });
+  });
+
+  // Presenter mode + shortcuts overlay buttons
+  document.getElementById("presenterBtn")?.addEventListener("click", () => togglePresenterMode());
+  document.getElementById("presenterExit")?.addEventListener("click", () => {
+    if (state.storyPlaying) toggleStoryMode();
+    togglePresenterMode(false);
+  });
+  document.getElementById("presenterPrev")?.addEventListener("click", () => goToOffset(-1));
+  document.getElementById("presenterNext")?.addEventListener("click", () => goToOffset(1));
+  document.getElementById("presenterPlay")?.addEventListener("click", () => toggleStoryMode());
+
+  document.getElementById("shortcutsBtn")?.addEventListener("click", () => toggleShortcutsHelp(true));
+  document.getElementById("shortcutsClose")?.addEventListener("click", () => toggleShortcutsHelp(false));
+  document.getElementById("shortcutsOverlay")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) toggleShortcutsHelp(false);
+  });
+
+  // Splash intro: any click/tap or any key dismisses it.
+  const splash = document.getElementById("splashIntro");
+  splash?.addEventListener("click", () => dismissSplash());
+  document.getElementById("splashStart")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dismissSplash();
+  });
+
+  // Keyboard shortcuts. Don't intercept while typing in inputs or with modifier keys.
+  document.addEventListener("keydown", (e) => {
+    const inField = e.target.matches?.("input, textarea, [contenteditable='true']");
+    if (inField || e.metaKey || e.ctrlKey || e.altKey) return;
+
+    if (isSplashVisible()) {
+      e.preventDefault();
+      dismissSplash();
+      return;
+    }
+
+    switch (e.key) {
+      case " ":
+        e.preventDefault();
+        toggleStoryMode();
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        goToOffset(1);
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        goToOffset(-1);
+        break;
+      case "p":
+      case "P":
+        e.preventDefault();
+        togglePresenterMode();
+        break;
+      case "f":
+      case "F":
+        e.preventDefault();
+        toggleFullscreen();
+        break;
+      case "?":
+        e.preventDefault();
+        toggleShortcutsHelp();
+        break;
+      case "Escape":
+        if (document.body.classList.contains("shortcuts-open")) {
+          toggleShortcutsHelp(false);
+        } else if (document.body.classList.contains("presenter")) {
+          togglePresenterMode(false);
+        }
+        break;
+    }
   });
 }
 

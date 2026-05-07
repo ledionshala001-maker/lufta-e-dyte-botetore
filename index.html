@@ -12,7 +12,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 </head>
 <body>
   <div class="page-shell">
@@ -82,7 +85,16 @@
       <section class="selected-card">
         <div class="section-title-row">
           <h2>Ngjarja e Zgjedhur</h2>
-          <button id="storyBtn" class="story-btn" type="button">Luaj Kronologjinë</button>
+          <button id="storyBtn" class="story-btn" type="button">Luaj kronologjinë</button>
+        </div>
+        <div class="story-pace" role="group" aria-label="Ritmi i kronologjisë">
+          <span class="pace-label">Ritmi i kronologjisë</span>
+          <div class="pace-btns" id="paceFilters">
+            <button class="pace-btn" type="button" data-pace="6000">Shpejt · 6s</button>
+            <button class="pace-btn active" type="button" data-pace="12000">Mesatar · 12s</button>
+            <button class="pace-btn" type="button" data-pace="18000">Ngadalë · 18s</button>
+            <button class="pace-btn" type="button" data-pace="25000">Lexuese · 25s</button>
+          </div>
         </div>
         <div id="storyProgress" class="story-progress" style="display: none;">
           <div class="progress-bar">
@@ -94,8 +106,8 @@
           <p class="selected-empty">Zgjidh një ngjarje në hartë ose në listë që të shohësh më shumë detaje.</p>
         </div>
         <div id="storyControls" class="story-controls" style="display: none;">
-          <button id="playFromStartBtn" class="story-control-btn start" type="button">Luaj nga Fillimi</button>
-          <button id="continuePlayBtn" class="story-control-btn continue" type="button">Vazhdo Luajen</button>
+          <button id="playFromStartBtn" class="story-control-btn start" type="button">Luaj nga fillimi</button>
+          <button id="continuePlayBtn" class="story-control-btn continue" type="button">Vazhdo ku mbete</button>
         </div>
       </section>
 
@@ -111,12 +123,15 @@
     <section class="map-column">
       <main class="map-shell-card">
         <div class="map-topbar">
-          <div>
+          <div class="map-topbar-text">
             <p class="map-kicker">Hyr në histori</p>
             <h2>Shiko si lëviz lufta nga muaji në muaj</h2>
+            <p class="map-hint">Kliko shenjat në hartë ose kartelat në listë. Filtrat ndihmojnë ta tregosh luftën me rend.</p>
           </div>
           <div class="topbar-actions">
-            <button id="showAllBtn" class="topbar-btn" type="button">Shfaq Të Gjitha në Hartë</button>
+            <button id="showAllBtn" class="topbar-btn" type="button">Shfaq të gjitha në hartë</button>
+            <button id="presenterBtn" class="topbar-btn presenter-btn" type="button" aria-pressed="false" title="Modaliteti i prezantimit (P)">Prezantim</button>
+            <button id="shortcutsBtn" class="topbar-btn icon-btn" type="button" aria-label="Tastet e shpejta" title="Tastet e shpejta (?)">?</button>
           </div>
         </div>
 
@@ -143,10 +158,6 @@
         </div>
       </main>
 
-      <section class="map-help-card">
-        <p class="help-title">Si ta përdorësh</p>
-        <p>Kliko shenjat në hartë, ose kartelat në listë. Filtrat sipër të ndihmojnë ta tregosh luftën me rend dhe qartë.</p>
-      </section>
     </section>
   </div>
 
@@ -233,7 +244,54 @@
     </div>
   </footer>
 
+  <aside id="presenterPanel" class="presenter-panel" aria-hidden="true">
+    <button id="presenterExit" class="presenter-exit" type="button" aria-label="Dil nga prezantimi">✕</button>
+    <div class="presenter-content">
+      <div class="event-photo presenter-photo" data-photo-for=""></div>
+      <div class="presenter-text">
+        <p class="presenter-eyebrow"></p>
+        <h3 class="presenter-title"></h3>
+        <p class="presenter-desc"></p>
+      </div>
+    </div>
+    <div class="presenter-actions">
+      <button id="presenterPrev" class="presenter-nav" type="button" aria-label="Ngjarja e mëparshme">‹</button>
+      <button id="presenterPlay" class="presenter-nav play" type="button" aria-label="Luaj ose ndalo">▶</button>
+      <button id="presenterNext" class="presenter-nav" type="button" aria-label="Ngjarja e ardhshme">›</button>
+    </div>
+  </aside>
+
+  <div id="splashIntro" class="splash-intro" role="dialog" aria-labelledby="splashTitle">
+    <div class="splash-inner">
+      <p class="splash-eyebrow">1939 — 1945</p>
+      <h1 id="splashTitle" class="splash-title">Lufta e Dytë Botërore</h1>
+      <p class="splash-subtitle">e treguar përmes hartës dhe ngjarjeve kryesore</p>
+      <div class="splash-stats">
+        <div><span class="splash-num">31</span><span class="splash-lbl">ngjarje</span></div>
+        <div><span class="splash-num">60+</span><span class="splash-lbl">vende</span></div>
+        <div><span class="splash-num">~75M</span><span class="splash-lbl">jetë</span></div>
+      </div>
+      <button id="splashStart" class="splash-start" type="button">Fillo →</button>
+      <p class="splash-hint">Kliko kudo për të vazhduar</p>
+    </div>
+  </div>
+
+  <div id="shortcutsOverlay" class="shortcuts-overlay" aria-hidden="true" role="dialog" aria-labelledby="shortcutsTitle">
+    <div class="shortcuts-card">
+      <h3 id="shortcutsTitle">Tastet e shpejta</h3>
+      <dl class="shortcuts-list">
+        <dt><kbd>Space</kbd></dt><dd>Luaj ose ndalo kronologjinë</dd>
+        <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Ngjarja e mëparshme / e ardhshme</dd>
+        <dt><kbd>P</kbd></dt><dd>Modaliteti i prezantimit</dd>
+        <dt><kbd>F</kbd></dt><dd>Ekran i plotë</dd>
+        <dt><kbd>?</kbd></dt><dd>Trego këto shkurtore</dd>
+        <dt><kbd>Esc</kbd></dt><dd>Mbyll ose dil</dd>
+      </dl>
+      <button id="shortcutsClose" class="shortcuts-close" type="button">Mbyll</button>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
-  <script src="script.js"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>
